@@ -1,0 +1,32 @@
+# Python STAGE 1
+ARG USER=uauser
+ARG WORKDIR=/home/$USER/uaclient
+
+FROM python:3.13 AS builder
+
+WORKDIR $WORKDIR
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# Python STAGE 2
+FROM python:3.13-slim
+
+ARG USER
+ARG WORKDIR
+
+COPY --from=builder /install /usr/local
+
+WORKDIR $WORKDIR
+
+COPY main.py .
+COPY Frames $WORKDIR/Frames
+COPY ../CollectorNode/CentralConfig $WORKDIR/../CollectorNode/CentralConfig
+COPY ../CollectorNode/__init__.py $WORKDIR/../CollectorNode/
+
+RUN useradd -m -d /home/$USER $USER
+USER $USER
+
+EXPOSE 8501
+
+ENTRYPOINT ["streamlit", "run", "main.py", "--server.port8501", "--server.address=0.0.0.0"]

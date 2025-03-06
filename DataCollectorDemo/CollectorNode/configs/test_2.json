@@ -1,0 +1,6 @@
+{
+    "ip": "127.0.0.1",
+    "port": "4840",
+    "server_id": "test_server",
+    "uri": "http://example.org/opcua"
+}

@@ -1,0 +1,11 @@
+{
+    "FileConfigurations": {
+        "SelectedConfigFile": "test_2.json"
+    },
+    "ConfigEdit": {
+        "ip address": "127.0.0.1",
+        "port": "4840",
+        "server id": "test_server",
+        "server uri": "http://example.org/opcua"
+    }
+}
