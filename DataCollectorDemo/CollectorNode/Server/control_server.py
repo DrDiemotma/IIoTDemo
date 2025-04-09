@@ -1,10 +1,10 @@
-from altair.theme import active
 from fastapi import FastAPI
 
 from typing import Any
 
 from CollectorNode.Server import Command
 from CollectorNode.Server import ServerBase
+from Common.Communication import ActivitySelection, MessageCategory
 
 
 class ControlServer(ServerBase):
@@ -48,48 +48,44 @@ class ControlServer(ServerBase):
         server_names = tuple(x.name for x in self._servers)
         return server_names
 
-
-
-    def add_config(self, config_json: str):
-        pass
-
-    def select_client(self, ip_address: str, port: int):
-        pass
-
     def is_online(self) -> bool:
         return self._active
-
-
-
 
 
 server: ControlServer | None = None
 app = FastAPI()
 
 @app.post("/ControlServer")
-def execute_command(cmd: Command) -> dict[str, Any]:
+def execute_command(cmd: Command) -> dict[MessageCategory, Any]:
+    """
+    Execute a command in the server.
+    :param cmd: Command to execute.
+    :return: Results from the execution. Error message if not executable. Ordered by OK, NOK, and NAs.
+    """
     if server is None:
-        return {"error": "Server not initialized."}
+        return {MessageCategory.nok: "Server not initialized."}
 
     match cmd.type_:
-        case "":
-            pass
-    match cmd.action:
-        case "add_config":
-            server.add_config(*cmd.parameters)
-            return {"ok": None}
-        case "select_client":
-            server.select_client(*cmd.parameters)
-            return {"ok": None}
-        case "is_online":
-            is_online: bool = server.is_online()
-            return {"ok": is_online}
-        case "activate":
-            server.activate()
-            return {"ok": None}
-        case "deactivate":
-            server.deactivate()
-            return {"ok": None}
+        case ActivitySelection.get_info:
+            match cmd.command:
+                case "get_servers":
+                    names = server.get_server_names()
+                    return {MessageCategory.ok: names}
+                case _:
+                    return {MessageCategory.nok: "Command not found."}
+        case ActivitySelection.action:
+            match cmd.action:
+                case "is_online":
+                    is_online: bool = server.is_online()
+                    return {MessageCategory.ok: is_online}
+                case "activate":
+                    server.activate()
+                    return {MessageCategory.ok: None}
+                case "deactivate":
+                    server.deactivate()
+                    return {MessageCategory.ok: None}
+                case _:
+                    return {MessageCategory.nok: "Command not found."}
         case _:
-            return {"error": "Command not found."}
+            return {MessageCategory.nok: "Category not applicable in this context."}
 
