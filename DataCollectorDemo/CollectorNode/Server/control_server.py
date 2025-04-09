@@ -1,18 +1,54 @@
+from altair.theme import active
 from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import Any, Optional
 
-class Command(BaseModel):
-    action: str
-    parameters: Optional[list[Any]] = None
+from typing import Any
 
+from CollectorNode.Server import Command
+from CollectorNode.Server import ServerBase
 
 
-
-class ControlServer:
+class ControlServer(ServerBase):
+    """Central server for communication with the UI."""
 
     def __init__(self):
-        self._started = False
+        super().__init__("ControlServer")
+
+        self._servers: set[ServerBase] = set()
+
+    def activate(self):
+        """Activate the servers."""
+        if self._active:
+            return
+        for other_server in self._servers:
+            other_server._active = True
+
+        self._active = True
+
+    def deactivate(self):
+        """Deactivate the server."""
+        if not self._active:
+            return
+
+        for other_server in self._servers:
+            other_server._active = False
+
+        self._active = False
+
+
+    def register_server(self, other_server: ServerBase, set_active_automatically: bool = True):
+        """Register another server."""
+        if other_server in self._servers:
+            return
+
+        self._servers.add(other_server)
+        if set_active_automatically:
+            other_server._active = self._active
+
+    def get_server_names(self) -> tuple[str, ...]:
+        server_names = tuple(x.name for x in self._servers)
+        return server_names
+
+
 
     def add_config(self, config_json: str):
         pass
@@ -21,13 +57,9 @@ class ControlServer:
         pass
 
     def is_online(self) -> bool:
-        return self._started
+        return self._active
 
-    def activate(self):
-        self._started = True
 
-    def deactivate(self):
-        self._started = False
 
 
 
@@ -39,6 +71,9 @@ def execute_command(cmd: Command) -> dict[str, Any]:
     if server is None:
         return {"error": "Server not initialized."}
 
+    match cmd.type_:
+        case "":
+            pass
     match cmd.action:
         case "add_config":
             server.add_config(*cmd.parameters)

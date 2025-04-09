@@ -6,8 +6,8 @@ FROM python:3.13 AS builder
 
 WORKDIR $WORKDIR
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+COPY Requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r Requirements.txt
 
 # Python STAGE 2
 FROM python:3.13-slim
@@ -21,8 +21,9 @@ WORKDIR $WORKDIR
 
 COPY main.py .
 COPY Frames $WORKDIR/Frames
-COPY ../CollectorNode/CentralConfig $WORKDIR/../CollectorNode/CentralConfig
-COPY ../CollectorNode/__init__.py $WORKDIR/../CollectorNode/
+COPY Communication $WORKDIR/Communication
+COPY ../Common $WORKDIR/../Communication
+# COPY ../CollectorNode/CentralConfig $WORKDIR/../CollectorNode/CentralConfig
 
 RUN useradd -m -d /home/$USER $USER
 USER $USER
