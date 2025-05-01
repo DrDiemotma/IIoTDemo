@@ -8,9 +8,16 @@ class Command(BaseModel):
     """
     sender: str
     """Name of the sender."""
-    type_: ActivitySelection
+    target: str
+    """Target server component."""
+    type_: ActivitySelection = ActivitySelection.action
     """Type of the command as a string."""
     command: str
     """Command to execute."""
     parameters: Optional[list[Any]] = None
     """Parameters for the command to execute on the server."""
+
+    def __str__(self):
+        if self.parameters is None:
+            return f"From {self.sender} to {self.target} ({self.type_}): {self.command}"
+        return f"From {self.sender} to {self.target} ({self.type_}): {self.command} ({self.parameters})"

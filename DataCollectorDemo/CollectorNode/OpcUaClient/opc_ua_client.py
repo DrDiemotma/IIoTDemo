@@ -49,10 +49,17 @@ class OpcUaClient:
 
 class OpcUaClientFactory:
     @staticmethod
-    def new(config_file: str) -> None | OpcUaClient:
-        if not os.path.isfile(config_file):
-            return None
-        config: OpcUaConfig = OpcUaClientFactory._parse_config_file(config_file)
+    def new(config_input: OpcUaConfig | str) -> None | OpcUaClient:
+        config: OpcUaConfig | None = None
+        if config_input is OpcUaConfig:
+            config = config_input
+        elif config_input is str:
+            if not os.path.isfile(config_input):
+                return None
+            config: OpcUaConfig = OpcUaClientFactory._parse_config_file(config_input)
+            if config is None:
+                return None
+
         if config is None:
             return None
 
