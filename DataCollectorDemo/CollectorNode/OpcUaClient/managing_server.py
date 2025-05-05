@@ -1,5 +1,5 @@
 from CollectorNode.OpcUaClient import OpcUaClient
-from CollectorNode.Server import ServerBase, ConfigSet, ConfigData
+from Base.Server import ServerBase, ConfigSet
 from Common.Communication import Command, Response
 
 

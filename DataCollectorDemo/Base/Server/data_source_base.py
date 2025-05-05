@@ -1,6 +1,6 @@
 
 import abc
-from CollectorNode.Server.server_base import ServerBase
+from Base.Server.server_base import ServerBase
 from typing import Callable, Any
 
 class DataSourceBase(ServerBase, abc.ABC):

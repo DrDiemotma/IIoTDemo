@@ -1,6 +1,4 @@
-import pytest
-
-from CollectorNode.Server import ControlServer, ServerBase
+from Base.Server import ControlServer, ServerBase
 from Common.Communication import Command, ActivitySelection, MessageCategory, Response, ResponseFactory
 
 

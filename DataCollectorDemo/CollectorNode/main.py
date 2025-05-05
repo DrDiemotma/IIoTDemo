@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from Common.Communication import Command
 
-from Server.control_server import ControlServer
+from Base.Server import ControlServer
 from OpcUaClient import OpcUaManagingServer
 from UiServer import UiServer
 

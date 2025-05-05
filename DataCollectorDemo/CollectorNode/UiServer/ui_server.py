@@ -1,4 +1,4 @@
-from CollectorNode.Server import ServerBase
+from Base.Server import ServerBase
 from Common.Communication import Command, ActivitySelection, MessageCategory, Response, ResponseFactory
 from typing import Any
 
