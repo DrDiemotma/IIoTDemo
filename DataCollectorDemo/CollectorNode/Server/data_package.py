@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import pandas as pd
-from typing import Any
+from typing import Any, Optional
+
 
 @dataclass(frozen=True)
 class DataEntry:
@@ -43,3 +44,17 @@ class DataPackage:
         if len(self.data_fields) == 0:
             return None
         return max(x.measured_time for x in self.data_fields)
+
+@dataclass(frozen=True)
+class ConfigData:
+    """Data entry for configuration"""
+    property_name: str
+    property_value: str | int | float | list[str | int | float]
+
+@dataclass(frozen=True)
+class ConfigSet:
+    """Set of configurations."""
+    items: set[ConfigData]
+    """Configuration items"""
+    target: Optional[str] = None
+

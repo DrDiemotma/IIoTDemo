@@ -25,9 +25,10 @@ class ServerBase(abc.ABC):
 
     @property
     @abstractmethod
-    def server_namespace(self):
+    def server_namespace(self) -> str:
         """
-        Get the namespace for that particular server. This is used for addressing components.
+        Get the namespace for that particular server. This is used for addressing components, hence for automated
+        usages. If displayed, use "name" instead.
         """
         pass
 
