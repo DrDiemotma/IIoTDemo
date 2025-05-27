@@ -51,9 +51,9 @@ class OpcUaClientFactory:
     @staticmethod
     def new(config_input: OpcUaConfig | str) -> None | OpcUaClient:
         config: OpcUaConfig | None = None
-        if config_input is OpcUaConfig:
+        if isinstance(config_input, OpcUaConfig):
             config = config_input
-        elif config_input is str:
+        elif isinstance(config_input, str):
             if not os.path.isfile(config_input):
                 return None
             config: OpcUaConfig = OpcUaClientFactory._parse_config_file(config_input)

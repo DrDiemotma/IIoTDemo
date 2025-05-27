@@ -1,7 +1,7 @@
 from typing import Callable
 
 from Common.Communication import Command, MessageCategory, Response, ResponseFactory
-from Base.Server.server_base import ServerBase
+from BaseNode.Server.server_base import ServerBase
 from Common.Communication.activity_selection import ActivitySelection
 
 

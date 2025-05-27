@@ -21,7 +21,7 @@ WORKDIR $WORKDIR
 
 COPY CentralConfig $WORKDIR/CentralConfig
 COPY OpcUaClient $WORKDIR/OpcUaClient
-COPY ../Base/Server $WORKDIR/Server
+COPY ../BaseNode/Server $WORKDIR/Server
 COPY ../Common $WORKDIR/../Common
 
 COPY main.py .

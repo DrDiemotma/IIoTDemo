@@ -1,4 +1,4 @@
-from Base.Server import ServerBase
+from BaseNode.Server import ServerBase
 from Common.Communication import Command, ActivitySelection, MessageCategory, Response, ResponseFactory
 from typing import Any
 
@@ -17,7 +17,7 @@ class UiServer(ServerBase):
         :return:
         """
         if command.type_ is not ActivitySelection.action:
-            return Response(message_result=MessageCategory.nok, return_values="Info not implemented.")
+            return Response(message_result=MessageCategory.nok, return_value="Info not implemented.")
 
         match command.command:
             case "register":

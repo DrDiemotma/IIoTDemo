@@ -5,7 +5,7 @@ from Common.Communication import Response
 
 
 class ServerBase(abc.ABC):
-    """Base class for all servers."""
+    """BaseNode class for all servers."""
     def __init__(self, name: str):
         self._name: str = name
         self._server_active: bool = False

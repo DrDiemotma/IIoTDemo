@@ -1,4 +1,4 @@
-from Base.Server import ControlServer, ServerBase
+from BaseNode.Server import ControlServer, ServerBase
 from Common.Communication import Command, ActivitySelection, MessageCategory, Response, ResponseFactory
 
 

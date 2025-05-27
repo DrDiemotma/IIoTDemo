@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from Common.Communication import Command
 
-from Base.Server import ControlServer
+from BaseNode.Server import ControlServer
 from OpcUaClient import OpcUaManagingServer
-from UiServer import UiServer
+from UiNode.UiServer import UiServer
 
 
 
