@@ -135,5 +135,3 @@ class ControlServer(ServerBase):
 
         return target_server.execute_command(cmd)
 
-
-
