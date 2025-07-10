@@ -17,15 +17,21 @@ ARG WORKDIR
 
 COPY --from=builder /install /usr/local
 
+RUN useradd --create-home --uid 1000 $USER
+
 WORKDIR $WORKDIR
 
 COPY CentralConfig $WORKDIR/CentralConfig
 COPY OpcUaClient $WORKDIR/OpcUaClient
-COPY ../BaseNode/Server $WORKDIR/Server
+COPY ../Base/Server $WORKDIR/Server
 COPY ../Common $WORKDIR/../Common
 
 COPY main.py .
 
+RUN chown -R $USER $WORKDIR
+
+USER $USER
+
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

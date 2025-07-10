@@ -7,7 +7,7 @@ FROM python:3.13 AS builder
 WORKDIR $WORKDIR
 
 COPY Requirements.txt .
-RUN pip install --no-cache-dir --prefix=/install -r Requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Python STAGE 2
 FROM python:3.13-slim
