@@ -1,10 +1,10 @@
 # this script assumes that it is called from the main directory.
 
 ARG USER=controlserver
-ARG WORKDIR=/home/$USER/Service/
-ARG CONTROLDIR=$WORKDIR/ControlNode/
-ARG BASEDIR=$WORKDIR/BaseNode/
-ARG COMMONDIR=$WORKDIR/Common/
+ARG WORKDIR=/home/$USER/Service
+ARG CONTROLDIR=$WORKDIR/ControlNode
+ARG BASEDIR=$WORKDIR/BaseNode
+ARG COMMONDIR=$WORKDIR/Common
 
 FROM python:3.13 as builder
 

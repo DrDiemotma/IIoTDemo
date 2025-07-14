@@ -1,2 +1,6 @@
 asyncua
 fastapi
+uvicorn
+sympy
+numpy
+pandas
