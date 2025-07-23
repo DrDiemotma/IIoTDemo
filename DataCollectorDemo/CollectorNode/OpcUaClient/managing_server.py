@@ -1,10 +1,21 @@
 from CollectorNode.OpcUaClient import OpcUaClient, OpcUaConfig
 from BaseNode.Server import ServerBase, ConfigSet
 from CollectorNode.OpcUaClient.opc_ua_client import OpcUaClientFactory
-from Common.Communication import Command, Response, ResponseFactory
+from Common.Communication import Command, ResponseModel, ResponseFactory
+from Common.Model import ServerOutline
 
 
 class OpcUaManagingServer(ServerBase):
+
+    def get_outline(self) -> ServerOutline:
+        outline: ServerOutline = ServerOutline(
+            name=self.name,
+            port=self.port,
+            sensor_data_receiver=False,
+            sensor_data_sender=True
+        )
+
+        return outline
 
     @property
     def server_namespace(self):
@@ -15,7 +26,7 @@ class OpcUaManagingServer(ServerBase):
         return self._active
 
     def __init__(self):
-        super().__init__("OpcUaManager")
+        super().__init__("OpcUaManager", 8001)
         self._clients: list[OpcUaClient] = []
 
     def shutdown(self):
@@ -27,7 +38,7 @@ class OpcUaManagingServer(ServerBase):
         pass
 
 
-    def execute_command(self, command: Command) -> Response:
+    def execute_command(self, command: Command) -> ResponseModel:
         match command.command:
             case "add_config":
                 if command.parameters is None:
@@ -37,7 +48,7 @@ class OpcUaManagingServer(ServerBase):
                 return self._get_configs()
         return ResponseFactory.nok(f"Command unknown: {command.command}.")
 
-    def _configure_opc_ua_connection(self, dataset: OpcUaConfig) -> Response:
+    def _configure_opc_ua_connection(self, dataset: OpcUaConfig) -> ResponseModel:
         client: OpcUaClient = OpcUaClientFactory.new(dataset)
         if client is not None:
             self._clients.append(client)
@@ -45,6 +56,6 @@ class OpcUaManagingServer(ServerBase):
 
         return ResponseFactory.nok("Was not able to create client.")
 
-    def _get_configs(self) -> Response:
+    def _get_configs(self) -> ResponseModel:
         configs = [x.config for x in self._clients]
         return ResponseFactory.ok(values=configs)

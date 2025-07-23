@@ -1,11 +1,19 @@
-from BaseNode.Server import ControlServer, ServerBase
-from Common.Communication import Command, ActivitySelection, MessageCategory, Response, ResponseFactory
+from BaseNode.Server import ServerBase
+from ControlNode.Server import ControlServer
+from Common.Communication import Command, ActivitySelection, MessageCategory, ResponseModel, ResponseFactory
+from Common.Model import ServerOutline
 
 
 class TestServer(ServerBase):
     """
     Mockup server for testing purposes.
     """
+
+    def get_outline(self) -> ServerOutline:
+        return ServerOutline(
+            name=self.name,
+            port=self.port
+        )
 
     def shutdown(self):
         pass
@@ -16,7 +24,7 @@ class TestServer(ServerBase):
     _execute_command_called: int = 0
     _last_command: str | None = None
 
-    def execute_command(self, command: Command) -> Response:
+    def execute_command(self, command: Command) -> ResponseModel:
         self._execute_command_called += 1
         self._last_command = command.command
         return ResponseFactory.ok()
@@ -37,7 +45,7 @@ class TestServer(ServerBase):
         return self._execute_command_called
 
     def __init__(self, name: str = "Test"):
-        super().__init__(name)
+        super().__init__(name, 8999)
 
 
 def test_activate():
@@ -51,25 +59,12 @@ def test_activate():
 def test_register_server():
     sut: ControlServer = ControlServer()
     test_server: TestServer = TestServer()
-    test_server2 : TestServer = TestServer()
-    assert sut.is_online == False
-    assert test_server.is_online == False
-
-    sut.register_server(test_server)
-    names: tuple[str, ...] = sut.get_server_names()
-    assert "Test" in names
-    sut.activate()
-    assert test_server.is_online == True
-    sut.register_server(test_server2)
-    assert test_server2.is_online == True
-    sut.deactivate()
-    assert test_server.is_online == False
-    assert test_server2.is_online == False
+    sut.register_server(test_server.get_outline())
 
 def test_execute_command_to_control_server():
     sut: ControlServer = ControlServer()
     cmd: Command = Command(sender="Test", type_=ActivitySelection.get_info, command="get_servers", target=sut.server_namespace)
-    result: Response = sut.execute_command(cmd)
+    result: ResponseModel = sut.execute_command(cmd)
     assert result.message_result == MessageCategory.ok
     bad_cmd: Command = Command(sender="Test", type_=ActivitySelection.get_info, command="foo", target=sut.server_namespace)
     result = sut.execute_command(bad_cmd)

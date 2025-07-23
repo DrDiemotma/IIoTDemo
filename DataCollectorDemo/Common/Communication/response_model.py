@@ -1,11 +1,10 @@
 from typing import Optional, Any, Self
 from pydantic import BaseModel
-from sympy import andre
 
 from Common.Communication import MessageCategory
 
 
-class Response(BaseModel):
+class ResponseModel(BaseModel):
     """
     Response of action
     """
@@ -23,17 +22,17 @@ class Response(BaseModel):
 
 class ResponseFactory:
     @staticmethod
-    def ok(message: str | None = None, values: Any = None) -> Response:
+    def ok(message: str | None = None, values: Any = None) -> ResponseModel:
         if message is None and values is None:
-            return Response(message_result=MessageCategory.ok)
+            return ResponseModel(message_result=MessageCategory.ok)
         if values is None:
-            return Response(message_result=MessageCategory.ok, return_message=message)
+            return ResponseModel(message_result=MessageCategory.ok, return_message=message)
         if message is None:
-            return Response(message_result=MessageCategory.ok, return_value=values)
-        return Response(message_result=MessageCategory.ok, return_message=message, return_value=values)
+            return ResponseModel(message_result=MessageCategory.ok, return_value=values)
+        return ResponseModel(message_result=MessageCategory.ok, return_message=message, return_value=values)
 
     @staticmethod
     def nok(message: str, values: Any = None):
         if values is None:
-            return Response(message_result=MessageCategory.nok, return_message=message)
-        return Response(message_result=MessageCategory.nok, return_message=message, return_value=values)
+            return ResponseModel(message_result=MessageCategory.nok, return_message=message)
+        return ResponseModel(message_result=MessageCategory.nok, return_message=message, return_value=values)

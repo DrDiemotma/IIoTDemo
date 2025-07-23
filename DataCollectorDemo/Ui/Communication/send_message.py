@@ -1,7 +1,7 @@
 from Ui.Communication import (
     Target
 )
-from Common.Communication import ActivitySelection, Command, Response
+from Common.Communication import ActivitySelection, Command, ResponseModel
 import requests
 from typing import Any
 

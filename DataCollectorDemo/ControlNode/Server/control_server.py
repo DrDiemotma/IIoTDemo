@@ -1,14 +1,20 @@
 from typing import Callable
 
-from Common.Communication import Command, MessageCategory, Response, ResponseFactory
+from Common.Communication import Command, MessageCategory, ResponseModel, ResponseFactory
 from BaseNode.Server.server_base import ServerBase
 from Common.Communication.activity_selection import ActivitySelection
-
+from Common.Model import ServerOutline
 
 NAMESPACE: str = "ControlServer"
 
 class ControlServer(ServerBase):
     """Central server for communication with the UI."""
+
+    def get_outline(self) -> ServerOutline:
+        return ServerOutline(
+            port=self.port,
+            name=self.name
+        )
 
     def on_new_data(self, dataset):
         pass
@@ -18,9 +24,9 @@ class ControlServer(ServerBase):
         return NAMESPACE
 
     def __init__(self):
-        super().__init__("ControlServer")
+        super().__init__("ControlServer", 8000)
         self._register_callbacks: list[Callable[[str], None]] = []
-        self._servers: set[ServerBase] = set()
+        self._servers: set[ServerOutline] = set()
 
     def __del__(self):
         if self.is_online:
@@ -46,7 +52,7 @@ class ControlServer(ServerBase):
         self._active = False
 
 
-    def register_server(self, other_server: ServerBase, set_active_automatically: bool = True,
+    def register_server(self, other_server: ServerOutline, set_active_automatically: bool = True,
                         register_callback: Callable[[str], None] | None = None):
         """
         Register another server.
@@ -88,7 +94,7 @@ class ControlServer(ServerBase):
     async def get_mainloop(self):
         pass
 
-    def _execute(self, cmd: Command) -> Response:
+    def _execute(self, cmd: Command) -> ResponseModel:
         match cmd.type_:
             case ActivitySelection.get_info:
                 match cmd.command:
@@ -117,7 +123,7 @@ class ControlServer(ServerBase):
                 return ResponseFactory.nok("Category not applicable in this context.")
 
 
-    def execute_command(self, cmd: Command) -> Response:
+    def execute_command(self, cmd: Command) -> ResponseModel:
         """
         Execute a command in the server.
         :param cmd: Command to execute.
@@ -131,7 +137,7 @@ class ControlServer(ServerBase):
         target_server = next((x for x in self._servers if x.server_namespace == target), None)
         if target_server is None:
             # return {MessageCategory.nok: "Service not found"}
-            return Response(message_result=MessageCategory.nok, return_message="Service not found")
+            return ResponseModel(message_result=MessageCategory.nok, return_message="Service not found")
 
         return target_server.execute_command(cmd)
 
