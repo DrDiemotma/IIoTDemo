@@ -1,12 +1,12 @@
 from CollectorNode.OpcUaClient import OpcUaManagingServer, OpcUaConfig
-from Common.Communication import Command, ResponseModel, MessageCategory
+from Common.Communication import CommandModel, ResponseModel, MessageCategory
 
 
 def test_execute_command_add_config():
     sut = OpcUaManagingServer()
     config = OpcUaConfig(server_id="TestServer", ip="127.0.0.1", uri="TestServerUri")
-    command_add: Command = Command(sender="Test", target=sut.server_namespace, command="add_config",
-                                   parameters=[config])
+    command_add: CommandModel = CommandModel(sender="Test", target=sut.server_namespace, command="add_config",
+                                             parameters=[config])
     response: ResponseModel = sut.execute_command(command_add)
     if response.return_message is not None:
         print(response.return_message)
@@ -15,10 +15,10 @@ def test_execute_command_add_config():
 def test_execute_command_read_configs():
     sut = OpcUaManagingServer()
     config = OpcUaConfig(server_id="TestServer", ip="127.0.0.1", uri="TestServerUri")
-    command_add: Command = Command(sender="Test", target=sut.server_namespace, command="add_config",
-                                   parameters=[config])
+    command_add: CommandModel = CommandModel(sender="Test", target=sut.server_namespace, command="add_config",
+                                             parameters=[config])
     _ = sut.execute_command(command_add)
-    command_read: Command = Command(sender="Test", target=sut.server_namespace, command="get_configs")
+    command_read: CommandModel = CommandModel(sender="Test", target=sut.server_namespace, command="get_configs")
     response: ResponseModel = sut.execute_command(command_read)
     if response.return_message is not None:
         print(response.return_message)

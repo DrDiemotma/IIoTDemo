@@ -17,8 +17,6 @@ app.state.opc_ua_managing_server = opc_ua_managing_server
 app.include_router(router)
 
 
-
-
 if __name__ == '__main__':
     import multiprocessing
     import uvicorn

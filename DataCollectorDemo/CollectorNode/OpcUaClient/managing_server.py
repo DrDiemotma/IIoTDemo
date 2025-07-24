@@ -1,7 +1,7 @@
 from CollectorNode.OpcUaClient import OpcUaClient, OpcUaConfig
-from BaseNode.Server import ServerBase, ConfigSet
+from BaseNode.Server import ServerBase
 from CollectorNode.OpcUaClient.opc_ua_client import OpcUaClientFactory
-from Common.Communication import Command, ResponseModel, ResponseFactory
+from Common.Communication import CommandModel, ResponseModel, ResponseFactory
 from Common.Model import ServerOutline
 
 
@@ -16,10 +16,6 @@ class OpcUaManagingServer(ServerBase):
         )
 
         return outline
-
-    @property
-    def server_namespace(self):
-        return "OPCUA"
 
     @property
     def is_online(self):
@@ -38,7 +34,7 @@ class OpcUaManagingServer(ServerBase):
         pass
 
 
-    def execute_command(self, command: Command) -> ResponseModel:
+    def execute_command(self, command: CommandModel) -> ResponseModel:
         match command.command:
             case "add_config":
                 if command.parameters is None:

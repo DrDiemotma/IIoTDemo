@@ -2,7 +2,7 @@ import abc
 import asyncio
 from abc import abstractmethod
 
-from Common.Communication import Command, MessageCategory
+from Common.Communication import CommandModel, MessageCategory
 from Common.Communication import ResponseModel
 from Common.Model import ServerOutline
 import httpx
@@ -28,19 +28,6 @@ class ServerBase(abc.ABC):
     def port(self) -> int:
         """Port at which the server is reachable."""
         return self.__port
-
-    @abstractmethod
-    def execute_command(self, command: Command) -> ResponseModel:
-        pass
-
-    @property
-    @abstractmethod
-    def server_namespace(self) -> str:
-        """
-        Get the namespace for that particular server. This is used for addressing components, hence for automated
-        usages. If displayed, use "name" instead.
-        """
-        pass
 
     @property
     def _active(self):
@@ -85,19 +72,19 @@ class ServerBase(abc.ABC):
         server_url = f"http://localhost:{control_server_port}/{control_server_command}"
         outline = server_outline.model_dump()
 
-        async with httpx.AsyncClient() as control_server:
+        async with httpx.AsyncClient() as client:
             tries = 0
             success = False
             while not success and tries < retries:
                 print(f"Register to server {tries+1}/{retries}...")
-                http_response = await control_server.post(
+                http_response = await client.post(
                     server_url,
                     json=outline
                 )
                 try:
                     response: ResponseModel = ResponseModel(**(http_response.json()))
                 except Exception as e:
-                    print(f"Converting not successful: {e}.")
+                    print(f"Converting not successful: {e}")
                     tries += 1
                     await asyncio.sleep(wait_for_seconds)
                     continue

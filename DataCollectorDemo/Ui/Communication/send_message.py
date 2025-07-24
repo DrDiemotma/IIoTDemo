@@ -1,12 +1,9 @@
-from Ui.Communication import (
-    Target
-)
-from Common.Communication import ActivitySelection, Command, ResponseModel
+
+from Common.Communication import CommandModel
 import requests
-from typing import Any
 
 
-def send_message(target_url: str, command: Command):
+def send_message(target_url: str, command: CommandModel):
     """
     Send a message to the server.
     :param target_url: URL to the target.

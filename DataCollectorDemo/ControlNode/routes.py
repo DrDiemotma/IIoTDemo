@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Request
-
-from Common.Communication import ResponseFactory, ResponseModel
+from Common.Communication import ResponseFactory, ResponseModel, CommandModel
 from Common.Model import ServerOutline
 from ControlNode.Server import ControlServer
 
@@ -16,19 +15,23 @@ def is_online(request: Request):
     response = service.is_online
     return ResponseFactory.ok(values=response)
 
-@router.get("/server_namespace", response_model=ResponseModel)
-def server_namespace(request: Request):
-    service: ControlServer = request.app.state.control_server
-    response = service.server_namespace
-    return ResponseFactory.ok(values=response)
-
-@router.get("/call", response_model=ResponseModel)
-def call():
-    return ResponseFactory.ok(values=str(__file__))
-
 @router.post("/register", response_model=ResponseModel)
 async def register(data: ServerOutline, request: Request):
-    print("Start registering")
+    print(f"registering {data.name}")
     service: ControlServer = request.app.state.control_server
     service.register_server(data)
     return ResponseFactory.ok()
+
+@router.post("/publish_command", response_model=ResponseModel)
+async def publish_command(command: CommandModel, request: Request):
+    service: ControlServer = request.app.state.control_server
+    response = await service.publish_command(command)
+    return response
+
+@router.get("/get_services", response_model=ResponseModel)
+async def get_services(request: Request):
+    service: ControlServer = request.app.state.control_server
+    response = service.get_server_names()
+    print(response)
+    return ResponseFactory.ok(values=response)
+

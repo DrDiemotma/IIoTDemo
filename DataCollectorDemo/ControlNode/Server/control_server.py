@@ -1,8 +1,9 @@
 from typing import Callable
 
-from Common.Communication import Command, MessageCategory, ResponseModel, ResponseFactory
+import httpx
+
+from Common.Communication import CommandModel, ResponseModel, ResponseFactory
 from BaseNode.Server.server_base import ServerBase
-from Common.Communication.activity_selection import ActivitySelection
 from Common.Model import ServerOutline
 
 NAMESPACE: str = "ControlServer"
@@ -19,14 +20,12 @@ class ControlServer(ServerBase):
     def on_new_data(self, dataset):
         pass
 
-    @property
-    def server_namespace(self):
-        return NAMESPACE
-
     def __init__(self):
-        super().__init__("ControlServer", 8000)
+        super().__init__(NAMESPACE, 8000)
         self._register_callbacks: list[Callable[[str], None]] = []
         self._servers: set[ServerOutline] = set()
+        self._data_sources: set[ServerOutline] = set()
+        self._data_receivers: set[ServerOutline] = set()
 
     def __del__(self):
         if self.is_online:
@@ -64,6 +63,12 @@ class ControlServer(ServerBase):
             return
 
         self._servers.add(other_server)
+        if other_server.sensor_data_sender:
+            self._data_sources.add(other_server)
+
+        if other_server.sensor_data_receiver:
+            self._data_receivers.add(other_server)
+
         if set_active_automatically:
             other_server._active = self._active
 
@@ -91,53 +96,28 @@ class ControlServer(ServerBase):
     def shutdown(self):
         pass
 
-    async def get_mainloop(self):
-        pass
+    async def publish_command(self, command: CommandModel) -> ResponseModel:
+        target: ServerOutline | None = next((x for x in self._servers if x.name == command.target), None)
+        if target is None:
+            return ResponseFactory.nok("Target server not found.")
 
-    def _execute(self, cmd: Command) -> ResponseModel:
-        match cmd.type_:
-            case ActivitySelection.get_info:
-                match cmd.command:
-                    case "get_servers":
-                        names = self.get_server_names()
-                        return ResponseFactory.ok(values=names)
-                    case _:
-                        return ResponseFactory.nok("Command not found.")
-            case ActivitySelection.action:
-                match cmd.action:
-                    case "is_online":
-                        is_online: bool = self.is_online
-                        return ResponseFactory.ok(values=is_online)
-                    case "activate":
-                        self.activate()
-                        return ResponseFactory.ok()
-                    case "deactivate":
-                        self.deactivate()
-                        return ResponseFactory.ok()
-                    case "shutdown":
-                        self.shutdown()
-                        return ResponseFactory.ok()
-                    case _:
-                        return ResponseFactory.nok("Command not found")
-            case _:
-                return ResponseFactory.nok("Category not applicable in this context.")
+        address: str = f"http://localhost:{target.port}/{command.command}"
+
+        async with httpx.AsyncClient() as client:
+            try:
+                if command.parameters is None:
+                    http_response = await client.post(address)
+                else:
+                    payload = command.parameters.model_dump()
+                    http_response = await client.post(address, json=payload)
+
+                response: ResponseModel = ResponseModel(**(http_response.json()))
+            except Exception as e:
+                print(f"Converting not successful: {e}")
+                return ResponseFactory.nok(repr(e))
+
+            return response
 
 
-    def execute_command(self, cmd: Command) -> ResponseModel:
-        """
-        Execute a command in the server.
-        :param cmd: Command to execute.
-        :return: Results from the execution. Error message if not executable. Ordered by OK, NOK, and NAs.
-        """
 
-        target: str = cmd.target
-        if target == self.server_namespace:
-            return self._execute(cmd)
-
-        target_server = next((x for x in self._servers if x.server_namespace == target), None)
-        if target_server is None:
-            # return {MessageCategory.nok: "Service not found"}
-            return ResponseModel(message_result=MessageCategory.nok, return_message="Service not found")
-
-        return target_server.execute_command(cmd)
 

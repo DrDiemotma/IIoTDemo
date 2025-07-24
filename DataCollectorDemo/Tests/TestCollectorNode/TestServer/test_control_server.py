@@ -1,6 +1,6 @@
 from BaseNode.Server import ServerBase
 from ControlNode.Server import ControlServer
-from Common.Communication import Command, ActivitySelection, MessageCategory, ResponseModel, ResponseFactory
+from Common.Communication import CommandModel, ActivitySelection, MessageCategory, ResponseModel, ResponseFactory
 from Common.Model import ServerOutline
 
 
@@ -24,7 +24,7 @@ class TestServer(ServerBase):
     _execute_command_called: int = 0
     _last_command: str | None = None
 
-    def execute_command(self, command: Command) -> ResponseModel:
+    def execute_command(self, command: CommandModel) -> ResponseModel:
         self._execute_command_called += 1
         self._last_command = command.command
         return ResponseFactory.ok()
@@ -60,25 +60,12 @@ def test_register_server():
     sut: ControlServer = ControlServer()
     test_server: TestServer = TestServer()
     sut.register_server(test_server.get_outline())
-
-def test_execute_command_to_control_server():
-    sut: ControlServer = ControlServer()
-    cmd: Command = Command(sender="Test", type_=ActivitySelection.get_info, command="get_servers", target=sut.server_namespace)
-    result: ResponseModel = sut.execute_command(cmd)
-    assert result.message_result == MessageCategory.ok
-    bad_cmd: Command = Command(sender="Test", type_=ActivitySelection.get_info, command="foo", target=sut.server_namespace)
-    result = sut.execute_command(bad_cmd)
-    assert result.message_result == MessageCategory.nok
     
 def test_execute_command_to_other_server():
     sut: ControlServer = ControlServer()
     test_server: TestServer = TestServer()
     previously_called = test_server.execute_command_called
-    sut.register_server(test_server)
-    test_command = "test"
-    cmd: Command = Command(sender="Test", command=test_command, target=test_server.server_namespace)
-    result = sut.execute_command(cmd)
-    assert result.message_result == MessageCategory.ok
+    sut.register_server(test_server.get_outline())
     assert test_server.execute_command_called == previously_called + 1
 
 

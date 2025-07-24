@@ -1,5 +1,5 @@
 from BaseNode.Server import ServerBase
-from Common.Communication import Command, ActivitySelection, MessageCategory, ResponseModel, ResponseFactory
+from Common.Communication import CommandModel, ActivitySelection, MessageCategory, ResponseModel, ResponseFactory
 from typing import Any
 
 from Common.Model import ServerOutline
@@ -18,7 +18,7 @@ class UiServer(ServerBase):
 
     _settings: dict[str, Any]
 
-    def execute_command(self, command: Command) -> ResponseModel:
+    def execute_command(self, command: CommandModel) -> ResponseModel:
         """
         Execute the command. Known commands: "register" and "get_value".
         :param command: Command to execute.
@@ -53,12 +53,6 @@ class UiServer(ServerBase):
     def server_namespace(self):
         return NAME
 
-    def register(self, key: str, value: int | float | str | list[int | float | str], override = False) -> bool:
-        if not override and key in self._settings:
-            return False
-
-        self._settings[key] = value
-        return True
 
     def get_value(self, key: str) -> int | float | str | list[int | float | str] | None:
         if key not in self._settings:

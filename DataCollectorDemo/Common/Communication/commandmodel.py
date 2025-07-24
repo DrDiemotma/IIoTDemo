@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Any, Optional
 from Common.Communication import ActivitySelection
 
-class Command(BaseModel):
+class CommandModel(BaseModel):
     """
     Command class for communication between services.
     """
@@ -14,7 +14,7 @@ class Command(BaseModel):
     """Type of the command as a string."""
     command: str
     """Command to execute."""
-    parameters: Optional[list[Any]] = None
+    parameters: Optional[BaseModel] = None
     """Parameters for the command to execute on the server."""
 
     def __str__(self):

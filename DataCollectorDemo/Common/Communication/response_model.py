@@ -19,6 +19,9 @@ class ResponseModel(BaseModel):
             return f"{self.message_result}"
         return f"{self.message_result}: {self.return_value}"
 
+    class Config:
+        frozen = True
+
 
 class ResponseFactory:
     @staticmethod
