@@ -17,7 +17,7 @@ def is_online(request: Request):
 
 @router.post("/register", response_model=ResponseModel)
 async def register(data: ServerOutline, request: Request):
-    print(f"registering {data.name}")
+    print(f"registering {data.name} on port {data.port}")
     service: ControlServer = request.app.state.control_server
     service.register_server(data)
     return ResponseFactory.ok()

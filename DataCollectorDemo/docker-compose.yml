@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  controlnode:
+    build:
+      context: .
+      dockerfile: ControlNode/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/controlserer
+    volumes:
+      - .:/controlnode
+    depends_on:
+      -
+  uinode:
+    build:
+      context: .
+      dockerfile: UiNode/Dockerfile
+    ports:
+      - "8012:8012"
+    environment:
+      - PYTHONPATH=/Service
+    volumes:
+      - .:/uinode
+    depends_on:
+      - controlnode
+
+  ui:
+    build:
+      context: .
+      dockerfile: Ui/Dockerfile
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONPATH=/uiservice
+    volumes:
+      - .:/uiservice
+    depends_on:
+      - controlnode
+      - uinode
+
+  collectornode:
+    build:
+      context: .
+      dockerfile: CollectorNode/Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONPATH=/uaclient
+    volumes:
+      - .:/uaclient
+    depends_on:
+      - controlnode
+

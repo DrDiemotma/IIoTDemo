@@ -12,7 +12,8 @@ def start_ui(file = "../Ui/main.py"):
 
 services: list[tuple[str, int]] = [
     ("ControlNode.main:app", 8000),
-    ("CollectorNode.main:app", 8001)
+    ("CollectorNode.main:app", 8001),
+    ("UiNode.main:app", 8012)
 ]
 
 if __name__ == "__main__":

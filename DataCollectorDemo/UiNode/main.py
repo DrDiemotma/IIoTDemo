@@ -10,7 +10,7 @@ async def lifespan(application: FastAPI):
     await ui_server.register()
     yield
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.state.ui_server = ui_server
 app.include_router(router)

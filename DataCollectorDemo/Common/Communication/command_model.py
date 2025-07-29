@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Any, Optional
+from typing import Optional
 from Common.Communication import ActivitySelection
 
 class CommandModel(BaseModel):
@@ -21,3 +21,6 @@ class CommandModel(BaseModel):
         if self.parameters is None:
             return f"From {self.sender} to {self.target} ({self.type_}): {self.command}"
         return f"From {self.sender} to {self.target} ({self.type_}): {self.command} ({self.parameters})"
+
+    class Config:
+        frozen = True

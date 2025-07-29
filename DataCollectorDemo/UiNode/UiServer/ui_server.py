@@ -1,5 +1,11 @@
 from BaseNode.Server import ServerBase
-from Common.Communication import CommandModel, ActivitySelection, MessageCategory, ResponseModel, ResponseFactory
+from Common.Communication import (CommandModel,
+                                  ActivitySelection,
+                                  MessageCategory,
+                                  ResponseModel,
+                                  ResponseFactory,
+                                  ConfigurationModel
+                                  )
 from typing import Any
 
 from Common.Model import ServerOutline
@@ -52,6 +58,9 @@ class UiServer(ServerBase):
     @property
     def server_namespace(self):
         return NAME
+
+    def write_config(self, config: ConfigurationModel):
+        pass
 
 
     def get_value(self, key: str) -> int | float | str | list[int | float | str] | None:
