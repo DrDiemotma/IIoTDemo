@@ -33,17 +33,6 @@ class OpcUaManagingServer(ServerBase):
     def on_new_data(self, dataset):
         pass
 
-
-    def execute_command(self, command: CommandModel) -> ResponseModel:
-        match command.command:
-            case "add_config":
-                if command.parameters is None:
-                    return ResponseFactory.nok("Parameter for configuration not set.")
-                return self._configure_opc_ua_connection(*command.parameters)
-            case "get_configs":
-                return self._get_configs()
-        return ResponseFactory.nok(f"Command unknown: {command.command}.")
-
     def _configure_opc_ua_connection(self, dataset: OpcUaConfig) -> ResponseModel:
         client: OpcUaClient = OpcUaClientFactory.new(dataset)
         if client is not None:

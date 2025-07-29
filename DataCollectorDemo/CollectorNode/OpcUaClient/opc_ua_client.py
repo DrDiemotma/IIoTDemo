@@ -50,6 +50,12 @@ class OpcUaClient:
 class OpcUaClientFactory:
     @staticmethod
     def new(config_input: OpcUaConfig | str) -> None | OpcUaClient:
+        """
+        Create a new config or load from hard drive.
+        :param config_input: Either a configuration if this is a direct creation or a path to the file which stores the
+        configuration.
+        :return: OpcUaConfig if it can be created from the input or None.
+        """
         config: OpcUaConfig | None = None
         if isinstance(config_input, OpcUaConfig):
             config = config_input
@@ -67,23 +73,12 @@ class OpcUaClientFactory:
         client.config = config
         return client
 
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
     @staticmethod
     def _parse_config_file(config_file: str) -> None | OpcUaConfig:
         try:
             with open(config_file, "r") as f:
                 d = json.load(f)
-            config = OpcUaConfig(
-                ip = d["ip"],
-                port = d["port"],
-                server_id=d["server_id"],
-                uri=d["uri"]
-            )
+            config = OpcUaConfig(**d)
             return config
         except:
             return None
