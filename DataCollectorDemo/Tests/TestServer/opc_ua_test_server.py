@@ -1,0 +1,39 @@
+import asyncio
+import asyncua
+
+class OpcUaTestServer:
+    def __init__(self, endpoint: str,
+                 server_name: str = "TestServer",
+                 test_namespace: str = "http://test.org",
+                 object_name: str = "TestObject",
+                 variable_name: str = "TestVariable"):
+        self._endpoint: str = endpoint
+        self._server: asyncua.Server = asyncua.Server()
+        self._idx: int | None = None
+        self._var: asyncua.Node | None = None
+        self._server_task: asyncio.Task[None] | None = None
+        self._server_name: str = server_name
+        self._test_namespace: str = test_namespace
+        self._object_name: str = object_name
+        self._variable_name = variable_name
+
+
+    async def start(self, start_value: int = 42):
+        await self._server.init()
+        self._server.set_endpoint(self._endpoint)
+        self._server.set_server_name(self._server_name)
+        self._idx = await self._server.register_namespace(self._test_namespace)
+        obj: asyncua.Node = await self._server.nodes.objects.add_object(self._idx, self._object_name)
+        self._var = await obj.add_variable(self._idx, self._variable_name, start_value)
+        await self._var.set_writable()
+        self._server_task = asyncio.create_task(self._server.start())
+
+    async def stop(self):
+        if self._server:
+            await self._server.stop()
+        if self._server_task:
+            self._server_task.cancel()
+
+    async def write(self, value: int):
+        assert self._var is not None
+        await self._var.write_value(value)

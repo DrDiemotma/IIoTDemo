@@ -15,5 +15,9 @@ class OpcUaConfig:
     """Port to address the server."""
 
     def get_url(self) -> str:
+        """
+        Get the URL from the properties of the configuration.
+        :return: The URL to connect to.
+        """
         result: str = f"{PROTOCOL}://{self.ip}:{self.port}/{self.server_id}"
         return result
