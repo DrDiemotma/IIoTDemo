@@ -1,13 +1,22 @@
+import asyncio
 import json
 import os.path
+import pytest
 
-from CollectorNode.OpcUaClient import OpcUaClient, OpcUaClientFactory, OpcUaConfig
+from Tests.TestServer import OpcUaTestServer
+
+from CollectorNode.OpcUaClient import OpcUaClient, OpcUaClientFactory, OpcUaConfig, NodeConfig
 
 test_config: OpcUaConfig = OpcUaConfig(
     ip="127.0.0.1",
     server_id="TestServer",
     uri="test_server",
-    port=4840
+    port=4840,
+    subscriptions=[
+        NodeConfig(namespace="http://test.org",
+                   object_name="TestObject",
+                   value_name="TestVariable")
+    ]
 )
 
 def test_opc_ua_config_get_url():
@@ -41,8 +50,16 @@ def test_opc_ua_client_factory_new_from_file():
 
     assert client is not None
 
-def test_connect():
+@pytest.mark.asyncio
+async def test_connect():
+    server = OpcUaTestServer(test_config.get_url())
+    await server.start()
     client: OpcUaClient = OpcUaClientFactory.new(test_config)
+    await client.connect()
+    handler = client.handler
+    await server.write(100)
+    await asyncio.sleep(5)
+
 
 
 

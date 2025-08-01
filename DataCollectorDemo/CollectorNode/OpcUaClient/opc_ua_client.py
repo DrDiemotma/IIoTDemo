@@ -9,13 +9,13 @@ from .sub_handler import SubHandler
 import asyncua
 from asyncua import ua
 
-
 class OpcUaClient:
     def __init__(self):
         self.config: OpcUaConfig | None = None
         self._client: asyncua.Client | None = None
         self._handler: SubHandler | None = None
-        self._subscription: Subscription | None = None
+        self._subscriptions: list[Subscription] = []
+        self._handles: dict[Subscription, list[int]] = dict()
 
 
     async def is_connected(self):
@@ -29,22 +29,42 @@ class OpcUaClient:
         return True
 
 
-    async def connect(self):
+    async def connect(self, period: int = 50):
         if self._client is None:
-            self._client = asyncua.Client(self.config.get_url())
+            self._client = asyncua.Client(url=self.config.get_url())
 
-        self._handler = SubHandler()
-        async with self._client:
-            idx = await self._client.get_namespace_index(uri=self.config.uri)
-            # todo subscribe to the data nodes
-            self._subscription = await self._client.create_subscription(500, self._handler)
-            node = (self._client.get_node(ua.ObjectIds.Server_ServerStatus_CurrentTime), )
-            await self._subscription.subscribe_data_change(node)
+        try:
+            async with self._client:
+                for sub in self.config.subscriptions:
+                    idx = await self._client.get_namespace_index(uri=sub.namespace)
+                    subscription = await self._client.create_subscription(period, self._handler)
+                    self._subscriptions.append(subscription)
+                    # todo get the values
+                    # time_node: asyncua.Node = self._client.get_node(ua.ObjectIds.Server_ServerStatus_CurrentTime)
+                    value_node: asyncua.Node = await self._client.nodes.objects.get_child([f"{idx}:{sub.object_name}", f"{idx}:{sub.value_name}"])
+                    handle = await subscription.subscribe_data_change(value_node)
+                    if subscription not in self._handles:
+                        self._handles[subscription] = []
+                    self._handles[subscription].append(handle)
+        except ConnectionRefusedError as cre:
+            print(f"Connection was refused: {repr(cre)}")
+            return
+        except ValueError as value_error:
+            print(f"Cannot subscribe: {repr(value_error)}")
 
     def disconnect(self):
-        if self._subscription is None:
+        if len(self._subscriptions) == 0:
             return
-        self._subscription.delete()
+        for subscription, handle_list in self._handles.items():
+            for handle in handle_list:
+                subscription.unsubscribe(handle)
+
+    @property
+    def handler(self) -> SubHandler:
+        """Getting the handler for data transfer."""
+        if self._handler is None:
+            self._handler = SubHandler()
+        return self._handler
 
 
 class OpcUaClientFactory:

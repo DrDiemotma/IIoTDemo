@@ -27,6 +27,7 @@ class OpcUaTestServer:
         self._var = await obj.add_variable(self._idx, self._variable_name, start_value)
         await self._var.set_writable()
         self._server_task = asyncio.create_task(self._server.start())
+        await asyncio.sleep(1)
 
     async def stop(self):
         if self._server:

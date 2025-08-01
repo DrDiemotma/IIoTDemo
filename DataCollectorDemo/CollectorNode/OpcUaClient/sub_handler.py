@@ -1,12 +1,14 @@
 from asyncua import Node, ua
+from asyncua.common.subscription import DataChangeNotif
 
 
 class SubHandler:
-    def datachange_notification(self, node: Node, val, data):
+    async def datachange_notification(self, node: Node, val, data: DataChangeNotif):
+        source_timestamp: ua.datetime.timestamp = data.monitored_item.Value.SourceTimestamp
+        server_timestamp: ua.datetime.timestamp = data.monitored_item.Value.ServerTimestamp
+
+    async def event_notification(self, status: ua.EventNotificationList):
         pass
 
-    def event_notification(self, status: ua.EventNotificationList):
-        pass
-
-    def status_changed_notification(self, status: ua.StatusChangeNotification):
+    async def status_changed_notification(self, status: ua.StatusChangeNotification):
         pass
