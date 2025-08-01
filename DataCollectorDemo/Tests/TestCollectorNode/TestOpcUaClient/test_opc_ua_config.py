@@ -102,3 +102,7 @@ def test_load_config():
 
     new_config: OpcUaConfig = load_config(test_file)
     assert len(list_deviations(test_config, new_config)) == 0
+    try:
+        os.remove(test_file)
+    except:
+        raise
