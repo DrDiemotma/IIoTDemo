@@ -52,13 +52,29 @@ def test_opc_ua_client_factory_new_from_file():
 
 @pytest.mark.asyncio
 async def test_connect():
+    class DataReceiver:
+        def __init__(self):
+            self.data_received = False
+
+        def data_callback(self, data):
+            print(data)
+            self.data_received = True
+
+    data_receiver = DataReceiver()
+
     server = OpcUaTestServer(test_config.get_url())
     await server.start()
     client: OpcUaClient = OpcUaClientFactory.new(test_config)
     await client.connect()
-    handler = client.handler
-    await server.write(100)
-    await asyncio.sleep(5)
+    client.handler.subscribe(data_receiver.data_callback)
+    for i in range(0, 10):
+        await server.write(100 + i)
+        await asyncio.sleep(1)
+        if data_receiver.data_received:
+            break
+
+    assert data_receiver.data_received
+
 
 
 

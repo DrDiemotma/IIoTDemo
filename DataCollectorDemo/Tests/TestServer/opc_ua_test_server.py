@@ -1,5 +1,6 @@
 import asyncio
 import asyncua
+from asyncua import ua
 
 class OpcUaTestServer:
     def __init__(self, endpoint: str,
@@ -24,10 +25,14 @@ class OpcUaTestServer:
         self._server.set_server_name(self._server_name)
         self._idx = await self._server.register_namespace(self._test_namespace)
         obj: asyncua.Node = await self._server.nodes.objects.add_object(self._idx, self._object_name)
-        self._var = await obj.add_variable(self._idx, self._variable_name, start_value)
+        self._var = await obj.add_variable(self._idx, self._variable_name, start_value, varianttype=ua.VariantType.Int32)
         await self._var.set_writable()
+        access_level = ua.AccessLevel.CurrentRead | ua.AccessLevel.CurrentWrite
+        variant = ua.Variant(access_level, ua.VariantType.Byte)
+        data_value = ua.DataValue(variant)
+        await self._var.write_attribute(ua.AttributeIds.AccessLevel, data_value)
+        await self._var.write_attribute(ua.AttributeIds.UserAccessLevel, data_value)
         self._server_task = asyncio.create_task(self._server.start())
-        await asyncio.sleep(1)
 
     async def stop(self):
         if self._server:
@@ -37,4 +42,4 @@ class OpcUaTestServer:
 
     async def write(self, value: int):
         assert self._var is not None
-        await self._var.write_value(value)
+        await self._var.write_value(value, varianttype=ua.VariantType.Int32)

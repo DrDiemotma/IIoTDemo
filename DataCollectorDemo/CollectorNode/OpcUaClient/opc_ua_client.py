@@ -2,9 +2,13 @@ import os.path
 import json
 
 from asyncua.common.subscription import Subscription
+from asyncua.ua import UaStatusCodeError
+from babel.plural import value_node
 
+from . import NodeConfig
 from .opc_ua_config import OpcUaConfig
 from .sub_handler import SubHandler
+from .poller import Poller
 
 import asyncua
 from asyncua import ua
@@ -15,6 +19,7 @@ class OpcUaClient:
         self._client: asyncua.Client | None = None
         self._handler: SubHandler | None = None
         self._subscriptions: list[Subscription] = []
+        self._pollers: list[Poller] = []
         self._handles: dict[Subscription, list[int]] = dict()
 
 
@@ -29,19 +34,42 @@ class OpcUaClient:
         return True
 
 
-    async def connect(self, period: int = 50):
+    async def connect(self, period: int = 50, use_polling: bool = True):
+        """
+        Connect to the server.
+        :param period: Update frequency.
+        :param use_polling: if True: uses polling instead of subscriptions. Use subscriptions if the server supports that only.
+        :return: None.
+        """
+        if use_polling:
+            await self.__connect_polling(period)
+        await self.__connect_subscription(period)
+
+    async def __connect_polling(self, period: int):
+        if self._client is None:
+            self._client = asyncua.Client(url=self.config.get_url())
+        try:
+            async with self._client:
+                for sub in self.config.subscriptions:
+                    value_node: asyncua.Node = await self._get_node(sub)
+                    poller: Poller = Poller(value_node, period, lambda x: None)  # todo implement reference
+                    poller.start()
+                    self._pollers.append(poller)
+        except Exception:
+            raise
+
+
+    async def __connect_subscription(self, period: int):
         if self._client is None:
             self._client = asyncua.Client(url=self.config.get_url())
 
         try:
             async with self._client:
                 for sub in self.config.subscriptions:
-                    idx = await self._client.get_namespace_index(uri=sub.namespace)
-                    subscription = await self._client.create_subscription(period, self._handler)
+                    value_node: asyncua.Node = await self._get_node(sub)
+                    handler = self.handler
+                    subscription = await self._client.create_subscription(period, handler)
                     self._subscriptions.append(subscription)
-                    # todo get the values
-                    # time_node: asyncua.Node = self._client.get_node(ua.ObjectIds.Server_ServerStatus_CurrentTime)
-                    value_node: asyncua.Node = await self._client.nodes.objects.get_child([f"{idx}:{sub.object_name}", f"{idx}:{sub.value_name}"])
                     handle = await subscription.subscribe_data_change(value_node)
                     if subscription not in self._handles:
                         self._handles[subscription] = []
@@ -51,6 +79,8 @@ class OpcUaClient:
             return
         except ValueError as value_error:
             print(f"Cannot subscribe: {repr(value_error)}")
+        except UaStatusCodeError:
+            raise
 
     def disconnect(self):
         if len(self._subscriptions) == 0:
@@ -59,12 +89,23 @@ class OpcUaClient:
             for handle in handle_list:
                 subscription.unsubscribe(handle)
 
+        self._handles = []
+        self._subscriptions = []
+
     @property
     def handler(self) -> SubHandler:
         """Getting the handler for data transfer."""
         if self._handler is None:
             self._handler = SubHandler()
         return self._handler
+
+    async def _get_node(self, node_config: NodeConfig) -> asyncua.Node | None:
+        if not self._client:
+            return None
+        idx = await self._client.get_namespace_index(uri=node_config.namespace)
+        node_str: str = f"ns={idx};s={node_config.object_name}.{node_config.value_name}"
+        value_node: asyncua.Node = self._client.get_node(node_str)
+        return value_node
 
 
 class OpcUaClientFactory:
@@ -102,6 +143,8 @@ class OpcUaClientFactory:
             return config
         except:
             return None
+
+
 
 
 

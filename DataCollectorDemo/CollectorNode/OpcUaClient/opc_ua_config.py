@@ -37,6 +37,12 @@ class OpcUaConfig:
 
 
 def save_config(config: OpcUaConfig, file_path: str):
+    """
+    Save a configuration file which describes a subscription to an OPC UA data source.
+    :param config: Configuration file to write to the path.
+    :param file_path: File path to write the configuration file from.
+    :return: None.
+    """
     if os.path.isfile(file_path):
         try:
             os.remove(file_path)
@@ -49,9 +55,12 @@ def save_config(config: OpcUaConfig, file_path: str):
         raise
 
 
-
-
 def load_config(file_path: str) -> OpcUaConfig:
+    """
+    Load an OPC UA client configuration from a file.
+    :param file_path:
+    :return:
+    """
     if not os.path.isfile(file_path):
         raise FileNotFoundError(file_path)
 
@@ -68,16 +77,18 @@ class NodeConfigJsonEncoder(json.JSONEncoder):
     """Custom JSON config encoder for OPC UA and node configs."""
     def default(self, o: object):
         if isinstance(o, OpcUaConfig):
-            return self._opc_ua_config_encoder(o)
+            return NodeConfigJsonEncoder._opc_ua_config_encoder(o)
         if isinstance(o, NodeConfig):
-            return self._node_config_encoder(o)
+            return NodeConfigJsonEncoder._node_config_encoder(o)
 
         return super().default(o)
 
-    def _opc_ua_config_encoder(self, opc_ua_config: OpcUaConfig):
+    @staticmethod
+    def _opc_ua_config_encoder(opc_ua_config: OpcUaConfig):
         return opc_ua_config.__dict__
 
-    def _node_config_encoder(self, node_config: NodeConfig):
+    @staticmethod
+    def _node_config_encoder(node_config: NodeConfig):
         return node_config.__dict__
 
 
