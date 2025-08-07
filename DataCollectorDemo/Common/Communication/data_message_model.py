@@ -1,5 +1,4 @@
 from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
 
 SensorValue = int | float | bool | str | \
@@ -15,9 +14,9 @@ class DataMessageModel(BaseModel):
     """Reading time of the sensor value."""
     value: SensorValue
     """Reading of the sensor."""
-    server_timestamp: Optional[datetime] = None
+    server_timestamp: datetime | None = None
     """Time stamp of the server if that is different from the reading time."""
-    identifier: Optional[int] = None
+    identifier: int | None = None
     """Can be used for faster identification of measurement."""
 
     class Config:
