@@ -3,11 +3,22 @@ import asyncua
 from asyncua import ua
 
 class OpcUaTestServer:
+    """
+    Test server class for OPC UA. Used for unit tests.
+    """
     def __init__(self, endpoint: str,
                  server_name: str = "TestServer",
                  test_namespace: str = "http://test.org",
                  object_name: str = "TestObject",
                  variable_name: str = "TestVariable"):
+        """
+        ctor.
+        :param endpoint:
+        :param server_name:
+        :param test_namespace:
+        :param object_name:
+        :param variable_name:
+        """
         self._endpoint: str = endpoint
         self._server: asyncua.Server = asyncua.Server()
         self._idx: int | None = None
@@ -39,6 +50,9 @@ class OpcUaTestServer:
             await self._server.stop()
         if self._server_task:
             self._server_task.cancel()
+
+    def get_node(self):
+        return self._var
 
     async def write(self, value: int):
         assert self._var is not None

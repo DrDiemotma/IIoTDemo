@@ -5,7 +5,7 @@ from asyncua.common.subscription import Subscription
 from asyncua.ua import UaStatusCodeError
 from babel.plural import value_node
 
-from . import NodeConfig
+from .opc_ua_config import NodeConfig
 from .opc_ua_config import OpcUaConfig
 from .sub_handler import SubHandler
 from .poller import Poller
