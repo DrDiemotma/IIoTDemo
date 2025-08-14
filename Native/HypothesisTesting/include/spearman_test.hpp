@@ -27,6 +27,12 @@ public:
      * ctor.
      */
     SpearmanTest();
+
+    /**
+     * Execute the Spearman test to test independence of two sequences.
+     *
+     * @param data Tuples of data from the population.
+     */
     void execute_test(const std::vector<std::tuple<double, double>> &data) override;
 };
 
