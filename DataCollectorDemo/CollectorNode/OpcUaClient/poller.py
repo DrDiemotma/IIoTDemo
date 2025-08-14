@@ -54,7 +54,7 @@ class Poller:
     async def _poll(self):
         try:
             while self._running:
-                value = await self._node.read_value()
+                value = await self._read_node()
                 self._publish_callback(value)
                 await asyncio.sleep(self._sleep)
         except asyncio.CancelledError:
@@ -66,7 +66,7 @@ class Poller:
         data_value = await self._node.read_data_value()
         source_timestamp: datetime = data_value.SourceTimestamp
         server_timestamp: datetime = data_value.ServerTimestamp
-        value = data_value.Value
+        value = data_value.Value.Value
 
         message = DataMessageModel(name=self._name,
                                    timestamp=source_timestamp,

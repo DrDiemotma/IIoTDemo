@@ -28,12 +28,17 @@ class OpcUaTestServer:
         self._test_namespace: str = test_namespace
         self._object_name: str = object_name
         self._variable_name = variable_name
+        self._running: bool = False
 
 
     async def start(self, start_value: int = 42):
-        await self._server.init()
         self._server.set_endpoint(self._endpoint)
         self._server.set_server_name(self._server_name)
+        try:
+            await asyncio.wait_for(self._server.init(), timeout=15)
+        except:
+            print("Timeout while initializing the OPC UA server.")
+            raise
         self._idx = await self._server.register_namespace(self._test_namespace)
         obj: asyncua.Node = await self._server.nodes.objects.add_object(self._idx, self._object_name)
         self._var = await obj.add_variable(self._idx, self._variable_name, start_value, varianttype=ua.VariantType.Int32)
@@ -44,12 +49,18 @@ class OpcUaTestServer:
         await self._var.write_attribute(ua.AttributeIds.AccessLevel, data_value)
         await self._var.write_attribute(ua.AttributeIds.UserAccessLevel, data_value)
         self._server_task = asyncio.create_task(self._server.start())
+        self._running = True
 
     async def stop(self):
         if self._server:
             await self._server.stop()
         if self._server_task:
             self._server_task.cancel()
+        self._running = False
+
+    @property
+    def running(self):
+        return self._running
 
     def get_node(self):
         return self._var
