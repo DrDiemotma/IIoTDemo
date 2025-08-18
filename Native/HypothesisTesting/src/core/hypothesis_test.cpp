@@ -3,18 +3,22 @@
 //
 
 #include <hypothesis_test.hpp>
+#include <sided_hypothesis_test.hpp>
+#include <stdexcept>
 
 template<typename T>
-void HypothesisTest<T>::set_data(const std::vector<T> &data) {
-    m_data.clear();
-    m_data.insert(m_data.end(), data.begin(), data.end());
-    m_is_significant = false;
-    m_test_statistic = 0.0;
+void HypothesisTest<T>::set_significance_level(const double alpha) {
+    if (alpha < 0.0) {
+        throw std::invalid_argument("alpha must be positive");
+    }
+    if (alpha > 1.0) {
+        throw std::invalid_argument("alpha must be less than 1");
+    }
+
+    m_alpha = alpha;
 }
 
-template<typename T>
-bool HypothesisTest<T>::is_significant() const {
-    return m_is_significant;
-}
-
-
+template class HypothesisTest<std::pair<double, double>>;
+template class HypothesisTest<std::pair<double, int>>;
+template class SidedHypothesisTest<std::pair<double, double>>;
+template class SidedHypothesisTest<std::pair<double, int>>;
