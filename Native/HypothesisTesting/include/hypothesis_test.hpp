@@ -4,12 +4,13 @@
 
 #ifndef HYPOTHESISTESTING_HYPOTHESIS_TEST_HPP
 #define HYPOTHESISTESTING_HYPOTHESIS_TEST_HPP
+#include <memory>
 #include <vector>
 
 template<typename T>
 class HypothesisTest {
 public:
-    explicit HypothesisTest(const std::vector<T>& data) : m_data(data) {}
+    explicit HypothesisTest(const std::shared_ptr<std::vector<T>> data) : m_data(data) {}
     /**
      * Execute the test.
      */
@@ -38,7 +39,7 @@ public:
      */
     virtual ~HypothesisTest() = default;
 protected:
-    const std::vector<T>& m_data;
+    const std::shared_ptr<std::vector<T>> m_data;
     /**
      * Set the data in memory for potential recalculation. Resets all evaluations.
      */

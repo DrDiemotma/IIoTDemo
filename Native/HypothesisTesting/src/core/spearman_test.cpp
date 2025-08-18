@@ -7,7 +7,7 @@
 #include <numeric>
 
 void SpearmanTest::execute_test() {
-    const auto dimension = m_data.size();
+    const auto dimension = m_data->size();
     const auto scaling_factor = static_cast<double>(dimension * (dimension * dimension - 1));
     const auto ranks = calculate_ranks();
     double rank_difference_squared = 0;
@@ -16,46 +16,47 @@ void SpearmanTest::execute_test() {
         const auto difference_squared = difference * difference / scaling_factor;
         rank_difference_squared += difference_squared;
     }
-    const auto correlation_coefficient = 1.0 - 6 * rank_difference_squared;  // to formula, Pearson CC
-    if (std::abs(std::abs(correlation_coefficient) - 1.0) < 10e-6) {
+    m_correlation_coefficient = 1.0 - 6 * rank_difference_squared;  // to formula, Pearson CC
+    if (std::abs(std::abs(m_correlation_coefficient) - 1.0) < 10e-6) {
         // highly correlated, close to identical; nothing to decide here
         m_is_significant = false;
         return;
     }
-    m_test_statistic = correlation_coefficient * sqrt(dimension - 2) /
+    m_test_statistic = m_correlation_coefficient * sqrt(dimension - 2) /
         sqrt(1 - rank_difference_squared * rank_difference_squared);  // normalization to approx. x~t.
 
-    // one_sided vs. two sided test, r_s,a (p. 428, 8.65 onward)
     const boost::math::students_t dist(dimension - 2);  // n-2 degrees of freedom for this test
-    const double t_quantile = boost::math::quantile(dist, m_alpha);
-    m_is_significant = m_test_statistic > t_quantile;
+    const double alpha = this->is_sided ? 1 - (1 - m_alpha) / 2 : m_alpha;
+    const double t_quantile = boost::math::quantile(dist, alpha);
+    m_is_significant = std::abs(m_test_statistic) > t_quantile;
 }
 
 std::vector<SpearmanTest::Ranks> SpearmanTest::calculate_ranks() const {
-    std::vector<size_t> sort_indices1(m_data.size());
-    std::vector<size_t> sort_indices2(m_data.size());
+    std::vector<size_t> sort_indices1(m_data->size());
+    std::vector<size_t> sort_indices2(m_data->size());
     std::iota(sort_indices1.begin(), sort_indices1.end(), 0);
     std::iota(sort_indices2.begin(), sort_indices2.end(), 0);
+    Data& data_ref = *m_data;
     std::ranges::sort(sort_indices1,
-        [this](const size_t i1, const size_t i2) {
-            return this->m_data[i1].first < this->m_data[i2].first;
+        [data_ref](const size_t i1, const size_t i2) {
+            return data_ref[i1].first < data_ref[i2].first;
     });
     std::ranges::sort(sort_indices2,
-        [this](const size_t i1, const size_t i2) {
-            return this->m_data[i1].second < this->m_data[i2].second;
+        [data_ref](const size_t i1, const size_t i2) {
+            return data_ref[i1].second < data_ref[i2].second;
     });
 
     auto rank_x = 1.0;  // setting already to double to not have unnecessary casts
     auto rank_y = 1.0;  // setting already to double to not have unnecessary casts
-    auto value_x = this->m_data[sort_indices1[0]].first;
-    auto value_y = this->m_data[sort_indices2[0]].second;
-    std::vector ranks_set1(m_data.size(), 1.0);
-    std::vector ranks_set2(m_data.size(), 1.0);
+    auto value_x = data_ref[sort_indices1[0]].first;
+    auto value_y = data_ref[sort_indices2[0]].second;
+    std::vector ranks_set1(data_ref.size(), 1.0);
+    std::vector ranks_set2(data_ref.size(), 1.0);
 
     // first step: every element get the minimum rank possible to address
-    for (int i = 1; i < m_data.size(); ++i) {
-        auto const current_x = m_data[sort_indices1[i]].first;
-        auto const current_y = m_data[sort_indices2[i]].second;
+    for (int i = 1; i < data_ref.size(); ++i) {
+        auto const current_x = data_ref[sort_indices1[i]].first;
+        auto const current_y = data_ref[sort_indices2[i]].second;
         if (current_x - value_x > m_threshold) {  // current_x is always greater or equal because of the sort
             rank_x += 1.0;
         }
@@ -73,9 +74,9 @@ std::vector<SpearmanTest::Ranks> SpearmanTest::calculate_ranks() const {
     calculate_mid_ranks(ranks_set2, rank_y);
 
     std::vector<Ranks> ranks;
-    ranks.reserve(m_data.size());
-    for (int i = 0; i < m_data.size(); ++i) {
-        Ranks current_rank{m_data[i], ranks_set1[i], ranks_set2[i]};
+    ranks.reserve(data_ref.size());
+    for (int i = 0; i < data_ref.size(); ++i) {
+        Ranks current_rank{data_ref[i], ranks_set1[i], ranks_set2[i]};
         ranks.push_back(current_rank);
     }
 
