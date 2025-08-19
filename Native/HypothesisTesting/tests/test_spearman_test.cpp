@@ -5,7 +5,6 @@
 #include <gtest/gtest.h>
 #include <spearman_test.hpp>
 #include <numeric>
-#include <boost/math/special_functions/bernoulli.hpp>
 
 std::shared_ptr<const SpearmanTest::Data> generate_independent_test_data(const int min, const int max) {
     std::vector<double> span;
