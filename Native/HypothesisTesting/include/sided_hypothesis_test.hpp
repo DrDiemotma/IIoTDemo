@@ -10,7 +10,7 @@
 template<typename T>
 class SidedHypothesisTest : public HypothesisTest<T> {
 public:
-    explicit SidedHypothesisTest(const std::vector<T>& data) : HypothesisTest<T>(data) {}
+    explicit SidedHypothesisTest(const std::shared_ptr<const std::vector<T>> data) : HypothesisTest<T>(data) {}
     bool is_sided = true;
 };
 

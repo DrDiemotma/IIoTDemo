@@ -6,12 +6,13 @@
 #include <boost/math/distributions/students_t.hpp>
 #include <numeric>
 
+
 void SpearmanTest::execute_test() {
     const auto dimension = m_data->size();
     const auto scaling_factor = static_cast<double>(dimension * (dimension * dimension - 1));
-    const auto ranks = calculate_ranks();
+    calculate_ranks();
     double rank_difference_squared = 0;
-    for (auto rank_tuple : ranks ) {
+    for (auto rank_tuple : m_ranks ) {
         const auto difference  = rank_tuple.difference();
         const auto difference_squared = difference * difference / scaling_factor;
         rank_difference_squared += difference_squared;
@@ -22,21 +23,21 @@ void SpearmanTest::execute_test() {
         m_is_significant = false;
         return;
     }
-    m_test_statistic = m_correlation_coefficient * sqrt(dimension - 2) /
+    m_test_statistic = m_correlation_coefficient * sqrt(static_cast<double>(dimension - 2)) /
         sqrt(1 - rank_difference_squared * rank_difference_squared);  // normalization to approx. x~t.
 
-    const boost::math::students_t dist(dimension - 2);  // n-2 degrees of freedom for this test
+    const boost::math::students_t dist(static_cast<double>(dimension - 2));  // n-2 degrees of freedom for this test
     const double alpha = this->is_sided ? 1 - (1 - m_alpha) / 2 : m_alpha;
     const double t_quantile = boost::math::quantile(dist, alpha);
     m_is_significant = std::abs(m_test_statistic) > t_quantile;
 }
 
-std::vector<SpearmanTest::Ranks> SpearmanTest::calculate_ranks() const {
+void SpearmanTest::calculate_ranks() {
     std::vector<size_t> sort_indices1(m_data->size());
     std::vector<size_t> sort_indices2(m_data->size());
     std::iota(sort_indices1.begin(), sort_indices1.end(), 0);
     std::iota(sort_indices2.begin(), sort_indices2.end(), 0);
-    Data& data_ref = *m_data;
+    const Data& data_ref = *m_data;
     std::ranges::sort(sort_indices1,
         [data_ref](const size_t i1, const size_t i2) {
             return data_ref[i1].first < data_ref[i2].first;
@@ -73,14 +74,12 @@ std::vector<SpearmanTest::Ranks> SpearmanTest::calculate_ranks() const {
     calculate_mid_ranks(ranks_set1, rank_x);
     calculate_mid_ranks(ranks_set2, rank_y);
 
-    std::vector<Ranks> ranks;
-    ranks.reserve(data_ref.size());
+    m_ranks.clear();
+    m_ranks.reserve(data_ref.size());
     for (int i = 0; i < data_ref.size(); ++i) {
         Ranks current_rank{data_ref[i], ranks_set1[i], ranks_set2[i]};
-        ranks.push_back(current_rank);
+        m_ranks.push_back(current_rank);
     }
-
-    return ranks;
 }
 
 void SpearmanTest::set_equal_threshold(const double threshold) {
@@ -91,12 +90,12 @@ void SpearmanTest::set_equal_threshold(const double threshold) {
 }
 
 void SpearmanTest::calculate_mid_ranks(std::vector<double>& min_set_ranks, double& max_rank) {
-    const int n_elements = min_set_ranks.size();
+    const auto n_elements = static_cast<double>(min_set_ranks.size());  // treated as double for the rank calculation
     if (std::abs(n_elements - max_rank) < 10e-6) {  // no ties
         return;
     }
     double current_rank = 1.0;
-    while (current_rank < max_rank) {
+    while (current_rank < max_rank + 1 / n_elements) { // ranks are mitigated between the elements -> exceeding that breaks the loop
         std::vector<int> indices;
         std::vector<int> higher_ranks;
         for (int i = 0; i < n_elements; ++i) {
@@ -107,7 +106,7 @@ void SpearmanTest::calculate_mid_ranks(std::vector<double>& min_set_ranks, doubl
                 higher_ranks.push_back(i);
             }
         }
-        const int n_equals = indices.size();
+        const auto n_equals = static_cast<double>(indices.size());  //used several times as double later on
         if (n_equals <= 1) {
             current_rank += 1.0;
             continue;

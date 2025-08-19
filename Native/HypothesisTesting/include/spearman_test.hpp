@@ -44,7 +44,7 @@ public:
          * Difference between the ranks.
          * @return rank_item2 - rank_item1
          */
-        int difference() const { return rank_item2 - rank_item1; }
+        [[nodiscard]] double difference() const { return rank_item2 - rank_item1; }
     };
 
     /**
@@ -52,7 +52,8 @@ public:
      */
     using Data = std::vector<std::pair<double, double>>;  // std::vector to allocate on the heap. Might get big.
 
-    explicit SpearmanTest(const Data& data): SidedHypothesisTest(data){}
+    explicit SpearmanTest(const std::shared_ptr<const Data>& data): SidedHypothesisTest(data){}
+
     /**
      * Execute the Spearman test to test independence of two sequences.
      *
@@ -66,6 +67,12 @@ public:
     void set_equal_threshold(double threshold);
 
     /**
+     * Get the calculated ranks
+     * @return Ranks from the calculation
+     */
+    [[nodiscard]] std::vector<Ranks>& get_ranks()  { return m_ranks; }
+
+    /**
      * Get the current threshold by which two values get the same rank.
      * @return The current threshold.
      */
@@ -75,9 +82,10 @@ public:
 
 private:
     static void calculate_mid_ranks(std::vector<double>& min_set_ranks, double& max_rank);
-    [[nodiscard]] std::vector<Ranks> calculate_ranks() const;
+    void calculate_ranks();
     double m_threshold = 10e-6;
     double m_correlation_coefficient = 0;
+    std::vector<Ranks> m_ranks = std::vector<Ranks>();
 };
 
 #endif //HYPOTHESISTESTING_SPEARMAN_TEST_HPP
