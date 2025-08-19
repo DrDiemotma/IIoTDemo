@@ -7,6 +7,24 @@
 #include <numeric>
 #include <boost/math/special_functions/bernoulli.hpp>
 
+std::shared_ptr<const SpearmanTest::Data> generate_independent_test_data(const int min, const int max) {
+    std::vector<double> span;
+    span.reserve(max - min + 1);
+    for (int i = min; i <= max; ++i) {
+        span.push_back(i);
+    }
+
+    auto data = std::make_shared<SpearmanTest::Data>();
+    data->reserve(span.size() * span.size());
+    for (size_t i = 0; i < span.size(); ++i) {
+        for (size_t j = 0; j < span.size(); ++j) {
+            data->emplace_back(span[i], span[j]);
+        }
+    }
+
+    return data;
+}
+
 TEST(spearman_test, SimplePerfectCorrelation) {
 
     const auto data = std::make_shared<SpearmanTest::Data>(SpearmanTest::Data{
@@ -25,24 +43,6 @@ TEST(spearman_test, SimplePerfectCorrelation) {
     test.execute_test();
     const auto result = test.is_significant();
     EXPECT_FALSE(result);
-}
-
-std::shared_ptr<const SpearmanTest::Data> generate_independent_test_data(const int min, const int max) {
-    std::vector<double> span;
-    span.reserve(max - min + 1);
-    for (int i = min; i <= max; ++i) {
-        span.push_back(i);
-    }
-
-    auto data = std::make_shared<SpearmanTest::Data>();
-    data->reserve(span.size() * span.size());
-    for (size_t i = 0; i < span.size(); ++i) {
-        for (size_t j = 0; j < span.size(); ++j) {
-            data->emplace_back(span[i], span[j]);
-        }
-    }
-
-    return data;
 }
 
 TEST(spearman_test, SimpleRanks) {
