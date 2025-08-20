@@ -11,7 +11,7 @@
 // template class HypothesisTest<std::tuple<double, double>>;
 
 /**
- * @brief Spearman test for independence.
+ * @brief Spearman test for correlation.
  *
  * Assume a bivariate population [(X_1, Y_1), ..., (X_N, Y_N)] with joint
  * distribution function F_{X,Y} and marginal distribution functions F_X, and F_Y.

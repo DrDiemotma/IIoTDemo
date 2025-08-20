@@ -24,6 +24,33 @@ std::shared_ptr<const SpearmanTest::Data> generate_independent_test_data(const i
     return data;
 }
 
+std::shared_ptr<const SpearmanTest::Data> generate_dependent_test_data(const int min, const int max, size_t shift = 2) {
+    std::vector<double> span;
+    span.reserve(max - min + 1);
+    for (int i = min; i <= max; ++i) {
+        span.push_back(i);
+    }
+
+    auto rotate_index = [shift, span](const size_t original_index) {
+        size_t t = original_index + shift;
+        if (t >= span.size()) {
+            t = t - span.size();
+        }
+
+        return t;
+    };
+
+    const auto data = std::make_shared<SpearmanTest::Data>();
+    data->reserve(span.size() * span.size());
+    for (size_t i = 0; i < span.size(); ++i) {
+        for (size_t j = 0; j < span.size(); ++j) {
+            data->emplace_back(span[i], span[rotate_index(i)]);
+        }
+    }
+
+    return data;
+}
+
 TEST(spearman_test, SimplePerfectCorrelation) {
 
     const auto data = std::make_shared<SpearmanTest::Data>(SpearmanTest::Data{
@@ -38,6 +65,14 @@ TEST(spearman_test, SimplePerfectCorrelation) {
         {9.0, 9.0},
         {10.0, 10.0}
     });
+    SpearmanTest test(data);
+    test.execute_test();
+    const auto result = test.is_significant();
+    EXPECT_FALSE(result);
+}
+
+TEST(spearman_test, ComplexCorrelation) {
+    const auto data = generate_dependent_test_data(1, 12);
     SpearmanTest test(data);
     test.execute_test();
     const auto result = test.is_significant();
@@ -76,10 +111,10 @@ TEST(spearman_test, ComplexRanks) {
 }
 
 TEST(spearman_test, SimpleNotCorrelated) {
-    const auto data = generate_independent_test_data(1, 2);
+    const auto data = generate_independent_test_data(1, 12);
     SpearmanTest test(data);
     test.is_sided = false;
     test.execute_test();
     const auto result = test.is_significant();
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
 }

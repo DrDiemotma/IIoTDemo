@@ -9,27 +9,34 @@
 
 void SpearmanTest::execute_test() {
     const auto dimension = m_data->size();
-    const auto scaling_factor = static_cast<double>(dimension * (dimension * dimension - 1));
+    const auto scaling_factor = std::sqrt(static_cast<double>(dimension * (dimension * dimension - 1)));
     calculate_ranks();
+
+    // see M. Hollander et. al., "Nonparametric Statistical Methods", Third Edition, p. 428, (8.64)
     double rank_difference_squared = 0;
     for (auto rank_tuple : m_ranks ) {
-        const auto difference  = rank_tuple.difference();
-        const auto difference_squared = difference * difference / scaling_factor;
+        const auto difference_normalized  = rank_tuple.difference() / scaling_factor;
+        const auto difference_squared = difference_normalized * difference_normalized;
         rank_difference_squared += difference_squared;
     }
     m_correlation_coefficient = 1.0 - 6 * rank_difference_squared;  // to formula, Pearson CC
     if (std::abs(std::abs(m_correlation_coefficient) - 1.0) < 10e-6) {
         // highly correlated, close to identical; nothing to decide here
-        m_is_significant = false;
+        m_is_significant = true;
+        m_p_value = 0.0;
         return;
     }
-    m_test_statistic = m_correlation_coefficient * sqrt(static_cast<double>(dimension - 2)) /
-        sqrt(1 - rank_difference_squared * rank_difference_squared);  // normalization to approx. x~t.
+    const auto degrees_of_freedom = static_cast<double>(dimension - 2);
+    m_test_statistic = m_correlation_coefficient * sqrt(degrees_of_freedom) /
+        sqrt(1 - m_correlation_coefficient * m_correlation_coefficient);  // normalization to approx. x~t.
 
     const boost::math::students_t dist(static_cast<double>(dimension - 2));  // n-2 degrees of freedom for this test
-    const double alpha = this->is_sided ? 1 - (1 - m_alpha) / 2 : m_alpha;
-    const double t_quantile = boost::math::quantile(dist, alpha);
-    m_is_significant = std::abs(m_test_statistic) > t_quantile;
+    const double sided_p_value = 2.0 * (1.0 - boost::math::cdf(dist, std::fabs(m_test_statistic)));
+    m_p_value = is_sided ? sided_p_value : 2 * sided_p_value;
+
+    const double q = is_sided ? 1 - m_alpha : 1 - m_alpha / 2;
+    const double quantile = boost::math::quantile(dist, q);
+    m_is_significant = std::fabs(m_correlation_coefficient) >= quantile;
 }
 
 void SpearmanTest::calculate_ranks() {

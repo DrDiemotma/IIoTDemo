@@ -34,6 +34,8 @@ public:
      */
     [[nodiscard]] double get_significance_level() const { return m_alpha; }
 
+    [[nodiscard]] double p_value() const { return m_p_value; }
+
     /**
      * dtor.
      */
@@ -51,7 +53,12 @@ protected:
     /**
      * Significance level.
      */
-    double m_alpha = 0.95;
+    double m_alpha = 0.05;
+
+    /**
+     * p-value.
+     */
+    double m_p_value = 0.0;
 };
 
 #endif //HYPOTHESISTESTING_HYPOTHESIS_TEST_HPP
