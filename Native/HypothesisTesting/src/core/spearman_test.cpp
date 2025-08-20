@@ -36,7 +36,7 @@ void SpearmanTest::execute_test() {
 
     const double q = is_sided ? 1 - m_alpha : 1 - m_alpha / 2;
     const double quantile = boost::math::quantile(dist, q);
-    m_is_significant = std::fabs(m_correlation_coefficient) >= quantile;
+    m_is_significant = std::fabs(m_test_statistic) >= quantile;
 }
 
 void SpearmanTest::calculate_ranks() {

@@ -76,7 +76,7 @@ TEST(spearman_test, ComplexCorrelation) {
     SpearmanTest test(data);
     test.execute_test();
     const auto result = test.is_significant();
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 }
 
 TEST(spearman_test, SimpleRanks) {
