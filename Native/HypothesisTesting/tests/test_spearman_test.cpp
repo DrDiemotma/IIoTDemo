@@ -52,7 +52,7 @@ std::shared_ptr<const SpearmanTest::Data> generate_dependent_test_data(const int
 }
 
 TEST(spearman_test, SimplePerfectCorrelation) {
-
+    // This test exists to capture edge cases.
     const auto data = std::make_shared<SpearmanTest::Data>(SpearmanTest::Data{
         {1.0, 1.0},
         {2.0, 2.0},
@@ -68,7 +68,7 @@ TEST(spearman_test, SimplePerfectCorrelation) {
     SpearmanTest test(data);
     test.execute_test();
     const auto result = test.is_significant();
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 }
 
 TEST(spearman_test, ComplexCorrelation) {
