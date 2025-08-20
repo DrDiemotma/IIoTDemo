@@ -1,23 +1,16 @@
 from MyServer import opc_ua_server
-import asyncio
+from fastapi import FastAPI
 
-def main():
-    server = opc_ua_server.OpcUaTestServer()
-    print(server.alive_status())
-    try:
-        asyncio.run(server.start())
+app = FastAPI()
+server = opc_ua_server.OpcUaTestServer()
+app.state.server = server
 
-        while True:
-            print(server.alive_status())
-            asyncio.run(asyncio.sleep(5))
-
-
-    except KeyboardInterrupt:
-        print("Before halt: " + server.alive_status())
-        print("Halting...")
-        asyncio.run(server.stop())
-        print(server.alive_status())
-        del server
 
 if __name__ == '__main__':
-    main()
+    import multiprocessing
+    import uvicorn
+    def start_service(port: int = 4840):
+        uvicorn.run("main:app", host="127.0.0.1", port=port, reload=False)
+
+    process: multiprocessing.Process = multiprocessing.Process(target=start_service)
+    process.start()
