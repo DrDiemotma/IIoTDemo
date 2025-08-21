@@ -80,3 +80,13 @@ OPC UA initialization is so far without any security measures.
 In a future build, we will add support for certificate-based authentication.
 User and password authentification is not planned, as this is supposed to be a
 demo for machine-to-machine communication.
+
+## Data Analysis
+
+![Data Analysis Requirements](Images/[OCB]%20Data%20Evaluation.png)
+
+The data evaluation planned for this project consists of storage, spectral
+and context evaluations.
+Notice that both visualization and storage of detections are included.
+This results in a system which is adaptable to different kind of events and
+details: concrete examples are quality assurance or predictive maintenance.
