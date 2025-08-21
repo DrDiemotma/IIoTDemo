@@ -1,3 +1,4 @@
 asyncua
 uvicorn
 fastapi
+pandas

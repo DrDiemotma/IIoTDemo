@@ -1,9 +1,8 @@
-from time import sleep
-
 import asyncua
 import asyncio
 import random
 from asyncua import ua
+from Sensor import SensorBase
 
 OPC_TCP: str = "opc.tcp"
 IP_ADDRESS: str = "0.0.0.0"
@@ -27,11 +26,7 @@ class OpcUaTestServer:
                  port: int = OPC_UA_PORT,
                  server_endpoint: str = SERVER_ENDPOINT,
                  uri: str = URI,
-                 device_name: str = DEVICE,
-                 temperature_name: str = TEMPERATURE,
-                 pressure_name: str = PRESSURE,
-                 temperature_start_value: float = TEMPERATURE_START_VALUE,
-                 pressure_start_value: float = PRESSURE_START_VALUE):
+                 device_name: str = DEVICE):
         """
         ctor.
         :param freq: Frequency control, distance between two samples.
@@ -39,50 +34,39 @@ class OpcUaTestServer:
         :param server_endpoint: Definition for the server endpoint.
         :param uri:
         :param device_name:
-        :param temperature_name:
-        :param pressure_name:
-        :param temperature_start_value:
-        :param pressure_start_value:
         """
         self._freq = freq
         self._stop = True
-        self._current_temperature: float = temperature_start_value
-        self._current_pressure: float = pressure_start_value
         self._task: asyncio.Task | None = None
+        self._uri: str = uri
+        self._device_name: str = device_name
 
-        end_point: str = OPC_TCP \
-                            + "://" + IP_ADDRESS \
-                            + ":" + str(port) \
-                            + "/" + server_endpoint + "/"
+        self._end_point: str = (OPC_TCP
+                                + "://" + IP_ADDRESS
+                                + ":" + str(port)
+                                + "/" + server_endpoint + "/")
 
         self._server: asyncua.Server = asyncua.Server()
-        self._temperature: asyncua.Node | None = None
-        self._pressure: asyncua.Node | None = None
-
-        asyncio.run(self._setup_server(uri, end_point, device_name, temperature_name, temperature_start_value,
-                                       pressure_name, pressure_start_value))
 
     def alive_status(self) -> str:
         if self._stop:
             return "Server stopped."
-        asyncio.run(self._update_values())
+        asyncio.create_task(self._update_values())
         return f"Server alive, temp: {self._current_temperature}, press: {self._current_pressure}."
 
 
-    async def _setup_server(self, uri: str, end_point: str, device_name: str,
-                            temperature_name: str, temperature_start_value: float,
-                            pressure_name: str, pressure_start_value: float):
+    async def setup_server(self, configurations: list[SensorBase]):
         await self._server.init()
-        self._server.set_endpoint(end_point)
+        self._server.set_endpoint(self._end_point)
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
-        idx: int = await self._server.register_namespace(uri)
+        idx: int = await self._server.register_namespace(self._uri)
 
         objects: asyncua.Node = self._server.get_objects_node()
         device: asyncua.Node = await objects.add_object(idx, device_name)
-        self._temperature: asyncua.Node = await device.add_variable(idx, temperature_name, temperature_start_value)
-        self._pressure: asyncua.Node = await device.add_variable(idx, pressure_name, pressure_start_value)
-        await self._temperature.set_writable()
-        await self._pressure.set_writable()
+        temperature: asyncua.Node = await device.add_variable(idx, temperature_name, temperature_start_value)
+        pressure: asyncua.Node = await device.add_variable(idx, pressure_name, pressure_start_value)
+        await temperature.set_writable()
+        await pressure.set_writable()
 
     async def start(self):
         print("Starting server")
