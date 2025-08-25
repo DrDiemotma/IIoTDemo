@@ -1,5 +1,5 @@
 from .sensor_base import SensorBase
 from .temperature_sensor import TemperatureSensor
-from .mutator import Mutator
+from MyServer.Sensor.Modification.mutator import Mutator
 
 __all__ = ["SensorBase", "TemperatureSensor", "Mutator"]
