@@ -2,7 +2,7 @@ import asyncua
 import asyncio
 import random
 from asyncua import ua
-from Sensor import SensorBase
+from MyServer.Sensor import SensorBase
 
 OPC_TCP: str = "opc.tcp"
 IP_ADDRESS: str = "0.0.0.0"
@@ -62,11 +62,11 @@ class OpcUaTestServer:
         idx: int = await self._server.register_namespace(self._uri)
 
         objects: asyncua.Node = self._server.get_objects_node()
-        device: asyncua.Node = await objects.add_object(idx, device_name)
-        temperature: asyncua.Node = await device.add_variable(idx, temperature_name, temperature_start_value)
-        pressure: asyncua.Node = await device.add_variable(idx, pressure_name, pressure_start_value)
-        await temperature.set_writable()
-        await pressure.set_writable()
+        #device: asyncua.Node = await objects.add_object(idx, device_name)
+        #temperature: asyncua.Node = await device.add_variable(idx, temperature_name, temperature_start_value)
+        #pressure: asyncua.Node = await device.add_variable(idx, pressure_name, pressure_start_value)
+        #await temperature.set_writable()
+        #await pressure.set_writable()
 
     async def start(self):
         print("Starting server")

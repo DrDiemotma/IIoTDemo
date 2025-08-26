@@ -3,9 +3,6 @@ from datetime import datetime
 from MyServer.Sensor.sensor_base import SensorBase
 
 class TemperatureSensor(SensorBase[float]):
-    def on_polling(self):
-        pass
-
     def __init__(self,
                  identifier: int,
                  namespace: str = "Sensors",
@@ -14,8 +11,10 @@ class TemperatureSensor(SensorBase[float]):
                          namespace=namespace,
                          updates_per_second=updates_per_second)
 
-
     def to_json(self):
+        pass
+
+    def on_polling(self):
         pass
 
 

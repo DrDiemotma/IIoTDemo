@@ -34,6 +34,9 @@ class SensorBase[T](ABC):
         self.__source = None
         self.__task = None
 
+    def __del__(self):
+        self.stop()
+
 
     @property
     def namespace(self) -> str:
@@ -69,7 +72,13 @@ class SensorBase[T](ABC):
 
     @source.setter
     def source(self, value: Callable[[...], T]):
+        if self.__task is not None:
+            return
         self.__source = value
+
+    @property
+    def running(self):
+        return self.__task is not None
 
     async def __poller(self):
         time_span: float = 1.0 / self.__updates_per_second
