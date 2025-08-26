@@ -18,13 +18,12 @@ class TemperatureMutator(Mutator[float]):
         self._last_measurement: datetime = datetime.now()
 
 
-    def _update_current_value(self, timestamp: datetime) -> float:
-        last_value: float = self.current_value
+    def _update_current_value(self) -> tuple[datetime, float]:
         last_measurement: datetime = self._last_measurement
-        time_delta = timestamp - last_measurement
-        target_value:float = self._target_value()
-
-        return last_value
+        current_time: datetime = datetime.now()
+        taget_value = self._target_value()
+        return current_time, 0.0
+        pass
 
     def _target_value(self) -> float:
         match self.state:

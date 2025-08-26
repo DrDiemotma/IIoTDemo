@@ -33,26 +33,18 @@ class Mutator[T](ABC):
         """Set the state."""
         self.__state = state
 
-    def value_at(self, timestamp: datetime) -> T:
-        """
-        Transform the data to the respective state of the machine.
-        """
-        self.__last_measurement = timestamp
-        self.__current_value = self._update_current_value(timestamp)
-
     @abstractmethod
     def to_dict(self) -> dict:
         """Translate the data to a serializable json."""
         pass
 
-    @property
-    def current_value(self) -> T:
-        """Get the current value."""
-        return self.__current_value
-
     @abstractmethod
-    def _update_current_value(self, timestamp: datetime):
+    def _update_current_value(self) -> tuple[datetime, T]:
         """Update the current value."""
+        pass
+
+    def measure(self) -> T:
+        self.__current_value = self._update_current_value()
 
 
 
