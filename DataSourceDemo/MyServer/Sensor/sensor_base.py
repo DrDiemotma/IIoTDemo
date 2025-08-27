@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import datetime
 import asyncio
 from decimal import InvalidOperation
+import inspect
 
 
 class SensorBase[T](ABC):
@@ -53,9 +54,6 @@ class SensorBase[T](ABC):
         """The updates per second."""
         return self.__updates_per_second
 
-    def last_value(self) -> tuple[datetime, T]:
-        return self.__last_measured_time, self.__last_value
-
     @abstractmethod
     def to_json(self) -> str:
         """Create a JSON string from which the sensor can be reconstructed (but the recorded data)."""
@@ -82,16 +80,19 @@ class SensorBase[T](ABC):
 
     async def __poller(self):
         time_span: float = 1.0 / self.__updates_per_second
-        while self.__source is not None:
-            start_time: datetime = datetime.now()  # start of the full process
-            self.on_polling()
-            value: T = self.source()
-            time: datetime = datetime.now()  # time when received - source might take a while
-            await self.on_new_data(time, value)
-            stop_time: datetime = datetime.now()  # awaited new data received
-            time_delta: float = (stop_time - start_time).total_seconds()
-            if time_delta < time_span:
-                await asyncio.sleep(time_span - time_delta)
+        try:
+            while self.__source is not None:
+                start_time: datetime = datetime.now()  # start of the full process
+                self.on_polling()
+                value: T = self.source()
+                time: datetime = datetime.now()  # time when received - source might take a while
+                await self.on_new_data(time, value)
+                stop_time: datetime = datetime.now()  # awaited new data received
+                time_delta: float = (stop_time - start_time).total_seconds()
+                if time_delta < time_span:
+                    await asyncio.sleep(time_span - time_delta)
+        except:
+            raise
 
     def start(self):
         if self.__task is not None:
@@ -123,12 +124,16 @@ class SensorBase[T](ABC):
         async def safe_call(cb: Callable[[datetime, T], ...]):
             lock = self.__callback_locks.setdefault(cb, asyncio.Lock())
             async with lock:
-                await cb(timestamp, data)
+                if inspect.iscoroutinefunction(cb):
+                    await cb(timestamp, data)
+                else:
+                    await asyncio.to_thread(cb, timestamp, data)
 
         try:
             await asyncio.gather(*(safe_call(cb) for cb in self.__callbacks))
-        except:
-            raise
+        except Exception as e:
+            print(f"Was not able to gather: {e.__repr__()}")
+            raise e
 
     def add_callback(self, callback: Callable[[datetime, T], ...]):
         """Add a callback. Can be added only once.

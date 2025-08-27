@@ -2,14 +2,18 @@ from datetime import datetime
 from MyServer.MachineOperation import State, Mode
 from abc import ABC, abstractmethod
 
+from MyServer.Sensor import SensorBase
+
 
 class Mutator[T](ABC):
     """
     Mutator class for data, depending on state and operation mode of the machine.
     """
-    def __init__(self, start_value: T, mode: Mode = Mode.IDLE, state: State = State.NORMAL):
+    def __init__(self, sensor: SensorBase[T], start_value: T, mode: Mode = Mode.IDLE, state: State = State.NORMAL):
+        self.__sensor: SensorBase[T] = sensor
+        self.__sensor.source = self.measure
         self.__current_value: T = start_value
-        self.__last_measurement: datetime = datetime.now()
+        self.__value_time: datetime = datetime.now()
         self.__mode: Mode = mode
         self.__state: State = state
 
@@ -33,6 +37,16 @@ class Mutator[T](ABC):
         """Set the state."""
         self.__state = state
 
+    @property
+    def last_value(self) -> T:
+        """Get the last measured value."""
+        return self.__current_value
+
+    @property
+    def last_value_time(self) -> datetime:
+        """Get the time of the last measurement."""
+        return self.__value_time
+
     @abstractmethod
     def to_dict(self) -> dict:
         """Translate the data to a serializable json."""
@@ -44,8 +58,9 @@ class Mutator[T](ABC):
         pass
 
     def measure(self) -> T:
-        self.__current_value = self._update_current_value()
-
+        """Interface function for measurements."""
+        self.__value_time, self.__current_value = self._update_current_value()
+        return self.__current_value
 
 
 class MutatorFactory[T](ABC):

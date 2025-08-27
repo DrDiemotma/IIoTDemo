@@ -1,5 +1,4 @@
 import asyncio
-
 import pytest
 
 from MyServer.Sensor import TemperatureSensor
