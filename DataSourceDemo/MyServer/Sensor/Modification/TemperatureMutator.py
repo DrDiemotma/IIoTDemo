@@ -1,4 +1,5 @@
 import random
+import math
 from datetime import datetime
 
 from MyServer.Sensor import TemperatureSensor
@@ -34,8 +35,12 @@ class TemperatureMutator(Mutator[float]):
 
     def _update_current_value(self) -> tuple[datetime, float]:
         target_value = self._target_value()
+        time_delta = (datetime.now() - self.last_value_time).total_seconds()
+        weight = math.exp(- time_delta / self._adaption_rate)
+        adapted_value = weight * self.last_value + (1 - weight) * target_value
+        noisy_value = self.__random.normalvariate(adapted_value, self.__st_dev)
         time_stamp = datetime.now()
-        return time_stamp, target_value
+        return time_stamp, noisy_value
 
     def _target_value(self) -> float:
         match self.state:

@@ -42,3 +42,25 @@ async def test_updates():
     assert end_temperature > start_temperature
     assert end_time > start_time
 
+@pytest.mark.asyncio
+async def test_adaption():
+    sensor: TemperatureSensor = TemperatureSensor(1, updates_per_second=100)
+    consumer = TestSensorConsumer()
+    sensor.add_callback(consumer.callback)
+    # don't increase the st_dev value, this is here to have a very deterministic behaviour of temperature
+    sut: TemperatureMutator = TemperatureMutator(sensor, start_value=20.0, value_running=200, st_dev=10e-8)
+    sensor.start()
+    await asyncio.sleep(2.0 / sensor.updates_per_second) # make sure data is written
+    raw_data = [consumer.temperature] * 10
+    sut.mode = Mode.RUNNING
+    for i in range(1, 10):
+        await asyncio.sleep(1.0 / sensor.updates_per_second)
+        raw_data[i] = consumer.temperature
+    sensor.stop()  # we don't need to have it running for the rest of the test, just see that the data increases
+    for i in range(1, 10):
+        assert raw_data[i] > raw_data[i - 1]
+
+
+
+
+
