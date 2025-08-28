@@ -74,15 +74,15 @@ async def test_callback():
     assert test_sensor.callback_called_value > 0
 
 
-def test_to_json():
+def test_to_dict():
     d = {
         "identifier": 42,
         "namespace": "Sensors",
         "updates_per_second": 0.123
     }
     sensor: TemperatureSensor = TemperatureSensor(**d)
-    json_str = sensor.to_json()
-    d2 = json.loads(json_str)
+    d2 = sensor.to_dict()
+
     for key in d.keys():
         assert key in d2
         assert d[key] == d2[key]

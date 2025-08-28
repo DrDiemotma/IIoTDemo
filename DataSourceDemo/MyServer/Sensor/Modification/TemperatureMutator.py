@@ -25,6 +25,7 @@ class TemperatureMutator(Mutator[float]):
         """
         super().__init__(sensor, start_value)
         self.__random = random.Random(random_seed)
+        self.__seed = random_seed
         self.__st_dev: float = st_dev
         self._value_idle: float = value_idle
         self._value_running: float = value_running
@@ -65,10 +66,17 @@ class TemperatureMutator(Mutator[float]):
                 return self._value_running_broken
 
     def to_dict(self) -> dict:
-        raise NotImplementedError("To be implemented")
-
-
-
+        d = {
+            "sensor": self._get_sensor_dict(),
+            "start_value": self.last_value,
+            "random_seed": self.__seed,
+            "st_dev": self.__st_dev,
+            "value_idle": self._value_idle,
+            "value_running": self._value_running,
+            "value_running_broken": self._value_running_broken,
+            "adaption_rate": self._adaption_rate
+        }
+        return d
 
 class TemperatureMutatorFactory(MutatorFactory[float]):
 

@@ -55,7 +55,7 @@ class SensorBase[T](ABC):
         return self.__updates_per_second
 
     @abstractmethod
-    def to_json(self) -> str:
+    def to_dict(self) -> dict:
         """Create a JSON string from which the sensor can be reconstructed (but the recorded data)."""
         pass
 

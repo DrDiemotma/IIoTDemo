@@ -13,14 +13,14 @@ class TemperatureSensor(SensorBase[float]):
                          updates_per_second=updates_per_second)
         self._identifier = identifier
 
-    def to_json(self) -> str:
+    def to_dict(self) -> dict:
         d = {
             "identifier": self._identifier,
             "namespace": self.namespace,
             "updates_per_second": self.updates_per_second
         }
 
-        return json.dumps(d)
+        return d
 
     def on_polling(self):
         pass  # currently nothing to do here

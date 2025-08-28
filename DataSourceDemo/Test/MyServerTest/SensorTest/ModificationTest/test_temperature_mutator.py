@@ -1,5 +1,4 @@
 import asyncio
-
 import pytest
 from datetime import datetime
 
@@ -60,10 +59,44 @@ async def test_adaption():
     last_difference = 10000.0
     for i in range(1, 10):
         ascend = raw_data[i] - raw_data[i - 1]
-        assert ascend > 0  # should always increase
-        assert ascend < last_difference  # slows down ofer time
+        assert ascend > 0, print("")  # should always increase
+        assert ascend < last_difference, print("Temperature was expected to rise asymptotically, but went from"
+                                              f"{last_difference} to {ascend}.")  # slows down ofer time
         last_difference = ascend
 
+def test_to_dict():
+    sensor: TemperatureSensor = TemperatureSensor(1)
+    sensor_dict: dict = sensor.to_dict()
+    d = {
+        "sensor": sensor,
+        "start_value": 21.7,
+        "random_seed": 123,
+        "st_dev": 1.2,
+        "value_idle": 18.6,
+        "value_running": 72.8,
+        "value_running_broken": 161.91,
+        "adaption_rate": 0.262
+    }
+    sut: TemperatureMutator = TemperatureMutator(**d)
+    description = sut.to_dict()
+    for key, value in d.items():
+        assert key in description
+        v_test = description[key]
+        if isinstance(value, (int, float)):
+            assert abs(value - v_test) < 10e-12, print(f"Values for \"{key}\" to dissimilar: expected {value}, got {v_test}.")
+        elif isinstance(value, str):
+            assert value == v_test, print(f"Field {key} was not equal: expected \"{value}\", got \"{v_test}\"")
+        elif isinstance(value, TemperatureSensor):
+            target_dict = value.to_dict()
+            for sensor_key, sensor_value in sensor_dict.items():
+                assert sensor_key in target_dict, print(f"Key {sensor_key} expected but not in result dict.")
+                target_dict_value = target_dict[sensor_key]
+                if isinstance(sensor_value, (int, float)):
+                    assert abs(sensor_value - target_dict_value) < 10e-12, print(f"Values for {key}.{sensor_key} too" 
+                        f"dissimilar, expected {sensor_value}, got {target_dict_value}")
+                elif isinstance(sensor_value, str):
+                    assert sensor_value == target_dict_value, print(f"Field {key}.{sensor_key} not equal: expected"
+                        f"{sensor_value}, got {target_dict_value}")
 
 
 

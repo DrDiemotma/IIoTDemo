@@ -62,6 +62,10 @@ class Mutator[T](ABC):
         self.__value_time, self.__current_value = self._update_current_value()
         return self.__current_value
 
+    def _get_sensor_dict(self) -> dict:
+        """Get the sensor dictionary representation."""
+        return self.__sensor.to_dict()
+
 
 class MutatorFactory[T](ABC):
     @staticmethod
