@@ -1,5 +1,6 @@
 import asyncio
 import pytest
+import json
 
 from MyServer.Sensor import TemperatureSensor
 from datetime import datetime
@@ -71,3 +72,17 @@ async def test_callback():
     sut.stop()
     assert test_sensor.callback_called
     assert test_sensor.callback_called_value > 0
+
+
+def test_to_json():
+    d = {
+        "identifier": 42,
+        "namespace": "Sensors",
+        "updates_per_second": 0.123
+    }
+    sensor: TemperatureSensor = TemperatureSensor(**d)
+    json_str = sensor.to_json()
+    d2 = json.loads(json_str)
+    for key in d.keys():
+        assert key in d2
+        assert d[key] == d2[key]
