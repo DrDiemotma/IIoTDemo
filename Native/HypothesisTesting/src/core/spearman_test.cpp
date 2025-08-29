@@ -8,8 +8,8 @@
 
 
 void SpearmanTest::execute_test() {
-    const auto dimension = m_data->size();
-    const auto scaling_factor = std::sqrt(static_cast<double>(dimension * (dimension * dimension - 1)));
+    const auto dimension = static_cast<double>(m_data->size());
+    const auto scaling_factor = std::sqrt(dimension * (dimension - 1.0) * (dimension + 1.0));
     calculate_ranks();
 
     // see M. Hollander et. al., "Nonparametric Statistical Methods", Third Edition, p. 428, (8.64)
