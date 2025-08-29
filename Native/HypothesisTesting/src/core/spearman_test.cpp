@@ -9,7 +9,7 @@
 
 void SpearmanTest::execute_test() {
     const auto dimension = static_cast<double>(m_data->size());
-    if (dimension < static_cast<double>(CRITICAL_DIMENSION)) {
+    if (dimension < static_cast<double>(CriticalDimension)) {
         throw std::invalid_argument("Sample size must be greater than CRITICAL_DIMENSION");
     }
     const auto ln_dim = std::log(dimension);

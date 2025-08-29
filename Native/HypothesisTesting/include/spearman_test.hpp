@@ -54,7 +54,7 @@ public:
 
     explicit SpearmanTest(const std::shared_ptr<const Data>& data): SidedHypothesisTest(data){}
 
-    const size_t CRITICAL_DIMENSION = 12;
+    const size_t CriticalDimension = 12;
 
     /**
      * Execute the Spearman test to test independence of two sequences.
