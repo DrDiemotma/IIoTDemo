@@ -1,6 +1,7 @@
 import random
 import math
 from datetime import datetime
+from MyServer.MachineOperation import SensorType
 
 from MyServer.Sensor import TemperatureSensor
 from MyServer.Sensor.Modification.mutator import  Mutator, MutatorFactory, Mode, State
@@ -67,6 +68,7 @@ class TemperatureMutator(Mutator[float]):
 
     def to_dict(self) -> dict:
         d = {
+            "type": SensorType.TEMPERATURE,
             "sensor": self._get_sensor_dict(),
             "start_value": self.last_value,
             "random_seed": self.__seed,
@@ -82,4 +84,15 @@ class TemperatureMutatorFactory(MutatorFactory[float]):
 
     @staticmethod
     def from_dict(d: dict) -> TemperatureMutator:
-        return TemperatureMutator(**d)
+        if not "sensor" in d:
+            raise ValueError("Dict is not complete")
+        if isinstance(d["sensor"], TemperatureSensor):
+            d2 = {key: value for key, value in d.items() if key != "type"}
+            return TemperatureMutator(**d2)
+        else:
+            d_sensor = {key: value for key, value in d["sensor"].items() if key != "type"}
+            new_sensor = TemperatureSensor(**d_sensor)
+            d2 = {key: value for key, value in d.items() if key != "sensor" and key != "type"}
+            d2["sensor"] = new_sensor
+
+            return TemperatureMutator(**d2)

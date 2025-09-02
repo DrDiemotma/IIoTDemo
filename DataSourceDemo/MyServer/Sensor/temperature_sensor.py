@@ -1,5 +1,4 @@
-import json
-
+from MyServer.MachineOperation import SensorType
 from MyServer.Sensor.sensor_base import SensorBase
 
 class TemperatureSensor(SensorBase[float]):
@@ -15,6 +14,7 @@ class TemperatureSensor(SensorBase[float]):
 
     def to_dict(self) -> dict:
         d = {
+            "type": SensorType.TEMPERATURE,
             "identifier": self._identifier,
             "namespace": self.namespace,
             "updates_per_second": self.updates_per_second
