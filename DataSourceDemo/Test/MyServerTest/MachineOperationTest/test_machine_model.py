@@ -31,7 +31,7 @@ class CustomMutator(Mutator[int]):
 
 def test_add_custom_sensor():
     sut: MachineModel = MachineModel()
-    sensor: CustomSensor = CustomSensor(name="Test", namespace="TestNamespace", updates_per_second=100)
+    sensor: CustomSensor = CustomSensor(name="Test", namespace="TestNamespace", updates_per_second=100, identifier=626)
     mutator: CustomMutator = CustomMutator(sensor, 0)
     sut.add_sensor(sensor, mutator)
     sut.mode = Mode.IDLE
@@ -47,9 +47,9 @@ def test_add_custom_sensor():
 def test_add_temperature_sensor():
     sensor: TemperatureSensor = TemperatureSensor(1)
     sut: MachineModel = MachineModel()
-    old_mutator_count = len(sut.mutators())
+    old_mutator_count = len(sut.mutators)
     sut.add_sensor(sensor)
-    assert len(sut.mutators()) > old_mutator_count, "Mutator for temperature sensor was not created."
+    assert len(sut.mutators) > old_mutator_count, "Mutator for temperature sensor was not created."
 
 def test_save_configuration():
     test_file_name: str = "test_machine_model_configuration.json"

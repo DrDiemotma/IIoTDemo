@@ -1,25 +1,32 @@
+from typing import Any, Generator
+
+import pytest
 from fastapi.testclient import TestClient
+from starlette.testclient import TestClient
 
 from MyServer.MachineOperation.sensor_data_model import SensorId
-from main import app
+from main import app, opc_ua_server
 
 from MyServer.Api import SensorConfig
 from MyServer.MachineOperation import SensorType
 
-def create_test_client() -> TestClient:
-    client = TestClient(app)
-    return client
+@pytest.fixture
+def client() -> Generator[TestClient, Any, None]:
+    # rewrite the state
+    server = opc_ua_server.OpcUaTestServer()
+    app.state.server = server
+    with TestClient(app) as client:
+        yield client
 
 
-def test_add_sensor_simulator_config_none():
+def test_add_sensor_simulator_config_none(client: TestClient):
     sensor_config: SensorConfig = SensorConfig(type=SensorType.TEMPERATURE, identifier=42, simulator_config=None)
-    client: TestClient = create_test_client()
+    # client: TestClient = create_test_client()
     response = client.post("/add_sensor", json=sensor_config.model_dump())
     assert response.is_success, print(response)
 
-def test_get_sensors():
+def test_get_sensors(client: TestClient):
     sensor_config: SensorConfig = SensorConfig(type=SensorType.TEMPERATURE, identifier=42, simulator_config=None)
-    client: TestClient = create_test_client()
     response = client.post("/add_sensor", json=sensor_config.model_dump())
     assert response.is_success, print(response)
 
@@ -29,9 +36,8 @@ def test_get_sensors():
     assert "sensors" in data, print(f"Response model must include \"sensors\".")
     assert len(data["sensors"]) > 0, print("Sensors must not be empty.")
 
-def test_delete_sensor():
-    sensor_config: SensorConfig = SensorConfig(type=SensorType.TEMPERATURE, identifier=42, simulator_config=None)
-    client: TestClient = create_test_client()
+def test_delete_sensor(client: TestClient):
+    sensor_config: SensorConfig = SensorConfig(type=SensorType.TEMPERATURE, identifier=97, simulator_config=None)
     response = client.post("/add_sensor", json=sensor_config.model_dump())
     assert response.is_success, print(response)
 
