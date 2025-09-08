@@ -1,8 +1,9 @@
 import asyncua
 import asyncio
 import random
+import os
 from asyncua import ua
-from MyServer.Sensor import SensorBase
+from MyServer.Lifetime import MachineModel
 
 OPC_TCP: str = "opc.tcp"
 IP_ADDRESS: str = "0.0.0.0"
@@ -15,6 +16,7 @@ PRESSURE: str = "Pressure"
 FREQ: float = 1.0
 TEMPERATURE_START_VALUE: float = 20.0
 PRESSURE_START_VALUE: float = 1013.25
+CONFIGURATION_FILE: str = "MachineModel.json"
 
 class OpcUaTestServer:
     """
@@ -26,7 +28,8 @@ class OpcUaTestServer:
                  port: int = OPC_UA_PORT,
                  server_endpoint: str = SERVER_ENDPOINT,
                  uri: str = URI,
-                 device_name: str = DEVICE):
+                 device_name: str = DEVICE,
+                 machine_model_file: str = CONFIGURATION_FILE):
         """
         ctor.
         :param freq: Frequency control, distance between two samples.
@@ -34,12 +37,14 @@ class OpcUaTestServer:
         :param server_endpoint: Definition for the server endpoint.
         :param uri:
         :param device_name:
+        :param machine_model_file: File to store the configuration of the machine model.
         """
         self._freq = freq
         self._stop = True
         self._task: asyncio.Task | None = None
         self._uri: str = uri
         self._device_name: str = device_name
+        self._machine_model_file = machine_model_file
 
         self._end_point: str = (OPC_TCP
                                 + "://" + IP_ADDRESS
@@ -47,6 +52,14 @@ class OpcUaTestServer:
                                 + "/" + server_endpoint + "/")
 
         self._server: asyncua.Server = asyncua.Server()
+        self._model: MachineModel = MachineModel()
+        if os.path.isfile(machine_model_file):
+            self._model.restore_configuration(self._machine_model_file)
+
+    @property
+    def model(self) -> MachineModel:
+        return self._model
+
 
     def alive_status(self) -> str:
         if self._stop:
@@ -55,18 +68,14 @@ class OpcUaTestServer:
         return f"Server alive, temp: {self._current_temperature}, press: {self._current_pressure}."
 
 
-    async def setup_server(self, configurations: list[SensorBase]):
+    async def setup_server(self):
         await self._server.init()
         self._server.set_endpoint(self._end_point)
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
         idx: int = await self._server.register_namespace(self._uri)
 
         objects: asyncua.Node = self._server.get_objects_node()
-        #device: asyncua.Node = await objects.add_object(idx, device_name)
-        #temperature: asyncua.Node = await device.add_variable(idx, temperature_name, temperature_start_value)
-        #pressure: asyncua.Node = await device.add_variable(idx, pressure_name, pressure_start_value)
-        #await temperature.set_writable()
-        #await pressure.set_writable()
+
 
     async def start(self):
         print("Starting server")

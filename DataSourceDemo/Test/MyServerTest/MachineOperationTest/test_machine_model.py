@@ -1,12 +1,16 @@
 import os.path
 from datetime import datetime
 
-from MyServer.MachineOperation import Mode, State
-from MyServer.MachineOperation.machine_model import MachineModel
+from MyServer.MachineOperation import Mode, State, SensorType
+from MyServer.Lifetime.machine_model import MachineModel
 from MyServer.Sensor import SensorBase, Mutator, TemperatureSensor
 
 
 class CustomSensor(SensorBase[int]):
+
+    @property
+    def sensor_type(self) -> SensorType:
+        return SensorType.TEMPERATURE
 
     def on_polling(self):
         pass
@@ -43,9 +47,9 @@ def test_add_custom_sensor():
 def test_add_temperature_sensor():
     sensor: TemperatureSensor = TemperatureSensor(1)
     sut: MachineModel = MachineModel()
-    old_mutator_count = len(sut.get_mutators())
+    old_mutator_count = len(sut.mutators())
     sut.add_sensor(sensor)
-    assert len(sut.get_mutators()) > old_mutator_count, "Mutator for temperature sensor was not created."
+    assert len(sut.mutators()) > old_mutator_count, "Mutator for temperature sensor was not created."
 
 def test_save_configuration():
     test_file_name: str = "test_machine_model_configuration.json"
@@ -84,7 +88,7 @@ def test_restore_configuration():
 
     sut: MachineModel = MachineModel()
     sut.restore_configuration(test_file_name)
-    mutators = sut.get_mutators()
+    mutators = sut.mutators
     assert len(mutators) == 2, print(f"Two mutators assumed, got {len(mutators)}.")
     sensor_names = [mutator.sensor.name for mutator in mutators]
     assert sensor.name in sensor_names, print(f"Sensor {sensor.name} not in loaded sensors.")

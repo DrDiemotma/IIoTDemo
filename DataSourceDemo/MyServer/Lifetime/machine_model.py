@@ -1,8 +1,10 @@
 import json
 
+from MyServer.MachineOperation.sensor_data_model import SensorId
 from MyServer.MachineOperation import State, Mode, SensorType
 from MyServer.Sensor import SensorBase, Mutator, TemperatureSensor
 from MyServer.Sensor.Modification.TemperatureMutator import TemperatureMutator, TemperatureMutatorFactory
+from MyServer.Sensor.Modification.mutator import MutatorFactory
 
 
 class MachineModel:
@@ -12,6 +14,10 @@ class MachineModel:
         self._mutators: list[Mutator] = []
         self._state: State = State.NORMAL
         self._mode: Mode = Mode.RUNNING
+
+        self._sensor_factory_map: dict[SensorType, MutatorFactory] = {
+            SensorType.TEMPERATURE: TemperatureMutatorFactory(),
+        }
 
     def __del__(self):
         for sensor in self._sensors:
@@ -37,27 +43,41 @@ class MachineModel:
             temperature_mutator.mode = self._mode
             self._mutators.append(temperature_mutator)
 
-    def get_mutators(self) -> list[Mutator]:
-        """Get the list of current mutators to fine-tune behaviour."""
-        return self._mutators
+    @property
+    def mutators(self) -> list[Mutator]:
+        """Get a list of current mutators to fine-tune behaviour."""
+        return list(self._mutators)
 
     def save_configuration(self, file_path: str):
+        """Save the current configuration to a file."""
         data = [mutator.to_dict() for mutator in self._mutators]
         with open(file_path, "w") as f:
             json.dump(data, f, indent=4)
 
     def restore_configuration(self, file_path: str):
+        """Load mutators from a file."""
         with open(file_path, "r") as f:
             dictionary = json.load(f)
         for entry in dictionary:
             sensor_type = SensorType(entry["type"])
-            match sensor_type:
-                case SensorType.TEMPERATURE:
-                    mutator: TemperatureMutator = TemperatureMutatorFactory.from_dict(entry)
-                    self._sensors.append(mutator.sensor)
-                    self._mutators.append(mutator)
-                case _:
-                    raise NotImplementedError(f"The case {entry["type"]} is not implemented yet.")
+            try:
+                factory: MutatorFactory = self._sensor_factory_map[sensor_type]
+            except KeyError:
+                raise NotImplementedError(f"The case {entry['type']} is not implemented yet.")
+
+            mutator: Mutator = factory.from_dict(entry)
+            self._sensors.append(mutator.sensor)
+            self._mutators.append(mutator)
+
+    def delete_sensor(self, sensor_id: SensorId):
+        mutator = next(x for x in self._mutators
+                       if x.sensor.identifier == sensor_id.identifier
+                       and x.sensor.sensor_type == sensor_id.type)
+        sensor = mutator.sensor
+        sensor.stop()
+        self._mutators.remove(mutator)
+        self._sensors.remove(sensor)
+
 
 
     @property

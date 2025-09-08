@@ -1,6 +1,6 @@
 import asyncio
 import pytest
-import json
+
 
 from MyServer.Sensor import TemperatureSensor
 from datetime import datetime

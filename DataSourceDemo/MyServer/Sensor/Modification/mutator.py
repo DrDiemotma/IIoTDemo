@@ -63,7 +63,7 @@ class Mutator[T](ABC):
         return self.__current_value
 
     @property
-    def sensor(self):
+    def sensor(self) -> SensorBase[T]:
         """Get the sensor from the mutator."""
         return self.__sensor
 

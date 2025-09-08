@@ -1,9 +1,11 @@
 from MyServer import opc_ua_server
 from fastapi import FastAPI
+from MyServer.Api import router
 
-app = FastAPI()
+app = FastAPI(title="OPC UA Server Demo")
 server = opc_ua_server.OpcUaTestServer()
 app.state.server = server
+app.include_router(router)
 
 
 if __name__ == '__main__':

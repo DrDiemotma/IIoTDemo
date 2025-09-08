@@ -2,3 +2,4 @@ asyncua
 uvicorn
 fastapi
 pandas
+pydantic

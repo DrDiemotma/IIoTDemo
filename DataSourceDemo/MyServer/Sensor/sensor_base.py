@@ -5,6 +5,8 @@ import asyncio
 from decimal import InvalidOperation
 import inspect
 
+from MyServer.MachineOperation import SensorType
+
 
 class SensorBase[T](ABC):
     """
@@ -20,10 +22,11 @@ class SensorBase[T](ABC):
     __source: Callable[[...], T] | None
     __task: asyncio.Task | None
 
-    def __init__(self, name: str, namespace: str, updates_per_second: float):
+    def __init__(self, name: str, identifier: int, namespace: str, updates_per_second: float):
         """
         ctor.
         :param name: Name of the sensor.
+        :param identifier: Identifier of the sensor.
         :param namespace: Namespace of the sensor (where in the data model to be present).
         :param updates_per_second: How often the sensor is updated.
         """
@@ -34,10 +37,15 @@ class SensorBase[T](ABC):
         self.__callback_locks: dict[Callable[[datetime, T], ...], asyncio.Lock] = {}
         self.__source = None
         self.__task = None
+        self.__identifier = identifier
 
     def __del__(self):
         self.stop()
 
+    @property
+    def identifier(self) -> int:
+        """Get the identifier."""
+        return self.__identifier
 
     @property
     def namespace(self) -> str:
@@ -53,6 +61,11 @@ class SensorBase[T](ABC):
     def updates_per_second(self):
         """The updates per second."""
         return self.__updates_per_second
+
+    @property
+    @abstractmethod
+    def sensor_type(self) -> SensorType:
+        pass
 
     @abstractmethod
     def to_dict(self) -> dict:

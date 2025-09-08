@@ -3,19 +3,24 @@ from MyServer.Sensor.sensor_base import SensorBase
 
 class TemperatureSensor(SensorBase[float]):
     """Temperature sensor implementation."""
+
+    @property
+    def sensor_type(self) -> SensorType:
+        return SensorType.TEMPERATURE
+
     def __init__(self,
                  identifier: int,
                  namespace: str = "Sensors",
                  updates_per_second: float = 0.5):
         super().__init__(name=f"Temperature_sensor_{identifier:03d}",
+                         identifier=identifier,
                          namespace=namespace,
                          updates_per_second=updates_per_second)
-        self._identifier = identifier
 
     def to_dict(self) -> dict:
         d = {
             "type": SensorType.TEMPERATURE,
-            "identifier": self._identifier,
+            "identifier": self.identifier,
             "namespace": self.namespace,
             "updates_per_second": self.updates_per_second
         }
