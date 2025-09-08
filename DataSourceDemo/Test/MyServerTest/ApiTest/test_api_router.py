@@ -2,7 +2,6 @@ from typing import Any, Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from starlette.testclient import TestClient
 
 from MyServer.MachineOperation.sensor_data_model import SensorId
 from main import app, opc_ua_server
