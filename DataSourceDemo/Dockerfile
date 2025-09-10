@@ -30,6 +30,6 @@ RUN useradd -m -d /home/$USER $USER
 USER $USER
 
 # Ports to expose, we are using a OPC UA server here
-EXPOSE 4840
+EXPOSE 4840, 8765
 
 CMD ["python", "main.py"]

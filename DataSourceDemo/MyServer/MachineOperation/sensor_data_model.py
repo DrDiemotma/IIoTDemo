@@ -21,8 +21,12 @@ class SensorConfigList(BaseModel):
     }
 
 class SensorId(BaseModel):
+    """A sensor ID."""
     type: SensorType
+    """Type of the sensor."""
     identifier: int
+    """Identifier number. Should be unique."""
+
     model_config = {
         "frozen": True
     }

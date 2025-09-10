@@ -1,9 +1,9 @@
 import asyncua
 import asyncio
-import random
 import os
 from asyncua import ua
 from MyServer.Lifetime import MachineModel
+from MyServer.Lifetime.machine_model_base import MachineModelBase
 
 OPC_TCP: str = "opc.tcp"
 IP_ADDRESS: str = "0.0.0.0"
@@ -29,7 +29,8 @@ class OpcUaTestServer:
                  server_endpoint: str = SERVER_ENDPOINT,
                  uri: str = URI,
                  device_name: str = DEVICE,
-                 machine_model_file: str = CONFIGURATION_FILE):
+                 machine_model_file: str = CONFIGURATION_FILE,
+                 machine_model: MachineModelBase | None = None):
         """
         ctor.
         :param freq: Frequency control, distance between two samples.
@@ -38,9 +39,10 @@ class OpcUaTestServer:
         :param uri:
         :param device_name:
         :param machine_model_file: File to store the configuration of the machine model.
+        :param machine_model: Machine representation.
         """
         self._freq = freq
-        self._stop = True
+        self._stopped = True
         self._task: asyncio.Task | None = None
         self._uri: str = uri
         self._device_name: str = device_name
@@ -52,23 +54,23 @@ class OpcUaTestServer:
                                 + "/" + server_endpoint + "/")
 
         self._server: asyncua.Server = asyncua.Server()
-        self._model: MachineModel = MachineModel()
+        self._model: MachineModelBase = machine_model if machine_model is not None else MachineModel()
         if os.path.isfile(machine_model_file):
             self._model.restore_configuration(self._machine_model_file)
 
     @property
-    def model(self) -> MachineModel:
+    def model(self) -> MachineModelBase:
         return self._model
 
 
     def alive_status(self) -> str:
-        if self._stop:
-            return "Server stopped."
-        asyncio.create_task(self._update_values())
-        return f"Server alive, temp: {self._current_temperature}, press: {self._current_pressure}."
+        pass
 
 
     async def setup_server(self):
+        if not self._stopped:
+            return
+
         await self._server.init()
         self._server.set_endpoint(self._end_point)
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
@@ -80,21 +82,15 @@ class OpcUaTestServer:
     async def start(self):
         print("Starting server")
         await self._server.start()
-        self._stop = False
+        self._stopped = False
 
-        self._task = asyncio.create_task(self._update_values())
-        print("Server running.")
 
     async def stop(self):
         print("Stopping server")
-        self._stop = True
+        self._stopped = True
         await asyncio.sleep(0.01 + self._freq)
         self._task.cancel()
         self._task = None
         print("Server stopped.")
 
-    async def _update_values(self):
-        self._current_temperature = random.gauss(self._current_temperature, 0.02)
-        self._current_pressure = random.gauss(self._current_pressure, 15.0)
-        await self._temperature.set_value(self._current_temperature)
-        await self._pressure.set_value(self._current_pressure)
+

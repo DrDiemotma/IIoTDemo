@@ -5,7 +5,9 @@ import asyncio
 from decimal import InvalidOperation
 import inspect
 
-from MyServer.MachineOperation import SensorType
+from pydantic.v1.typing import NONE_TYPES
+
+from MyServer.MachineOperation import SensorType, SensorId
 
 
 class SensorBase[T](ABC):
@@ -38,6 +40,7 @@ class SensorBase[T](ABC):
         self.__source = None
         self.__task = None
         self.__identifier = identifier
+        self.__sensor_id: SensorId | None = None
 
     def __del__(self):
         self.stop()
@@ -46,6 +49,13 @@ class SensorBase[T](ABC):
     def identifier(self) -> int:
         """Get the identifier."""
         return self.__identifier
+
+    @property
+    def sensor_id(self) -> SensorId:
+        """Get the sensor ID."""
+        if self.__sensor_id is None:
+            self.__sensor_id = SensorId(type=self.sensor_type, identifier=self.identifier)
+        return self.__sensor_id
 
     @property
     def namespace(self) -> str:

@@ -1,5 +1,6 @@
 import json
 
+from MyServer.Lifetime.machine_model_base import MachineModelBase
 from MyServer.MachineOperation.sensor_data_model import SensorId
 from MyServer.MachineOperation import State, Mode, SensorType
 from MyServer.Sensor import SensorBase, Mutator, TemperatureSensor
@@ -7,7 +8,7 @@ from MyServer.Sensor.Modification.TemperatureMutator import TemperatureMutator, 
 from MyServer.Sensor.Modification.mutator import MutatorFactory
 
 
-class MachineModel:
+class MachineModel(MachineModelBase):
     """Model for machine simulation. Handles the machine state and mode."""
     def __init__(self):
         self._sensors: list[SensorBase] = []
@@ -48,6 +49,12 @@ class MachineModel:
         """Get a list of current mutators to fine-tune behaviour."""
         return list(self._mutators)
 
+    @property
+    def sensors(self) -> list[SensorBase]:
+        """Get the sensors"""
+        return [x.sensor for x in self._mutators]
+
+
     def save_configuration(self, file_path: str):
         """Save the current configuration to a file."""
         data = [mutator.to_dict() for mutator in self._mutators]
@@ -71,14 +78,11 @@ class MachineModel:
 
     def delete_sensor(self, sensor_id: SensorId):
         mutator = next(x for x in self._mutators
-                       if x.sensor.identifier == sensor_id.identifier
-                       and x.sensor.sensor_type == sensor_id.type)
+                       if x.sensor.sensor_id == sensor_id)
         sensor = mutator.sensor
         sensor.stop()
         self._mutators.remove(mutator)
         self._sensors.remove(sensor)
-
-
 
     @property
     def state(self) -> State:
