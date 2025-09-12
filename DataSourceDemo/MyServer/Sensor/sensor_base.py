@@ -5,7 +5,6 @@ import asyncio
 from decimal import InvalidOperation
 import inspect
 
-from pydantic.v1.typing import NONE_TYPES
 
 from MyServer.MachineOperation import SensorType, SensorId
 
@@ -24,11 +23,12 @@ class SensorBase[T](ABC):
     __source: Callable[[...], T] | None
     __task: asyncio.Task | None
 
-    def __init__(self, name: str, identifier: int, namespace: str, updates_per_second: float):
+    def __init__(self, name: str, sensor_type: SensorType, identifier: int, namespace: str, updates_per_second: float):
         """
         ctor.
         :param name: Name of the sensor.
         :param identifier: Identifier of the sensor.
+        :param sensor_type: Type of the sensor.
         :param namespace: Namespace of the sensor (where in the data model to be present).
         :param updates_per_second: How often the sensor is updated.
         """
@@ -39,8 +39,7 @@ class SensorBase[T](ABC):
         self.__callback_locks: dict[Callable[[datetime, T], ...], asyncio.Lock] = {}
         self.__source = None
         self.__task = None
-        self.__identifier = identifier
-        self.__sensor_id: SensorId | None = None
+        self.__sensor_id: SensorId = SensorId(type=sensor_type, identifier=identifier)
 
     def __del__(self):
         self.stop()
@@ -48,13 +47,11 @@ class SensorBase[T](ABC):
     @property
     def identifier(self) -> int:
         """Get the identifier."""
-        return self.__identifier
+        return self.__sensor_id.identifier
 
     @property
     def sensor_id(self) -> SensorId:
         """Get the sensor ID."""
-        if self.__sensor_id is None:
-            self.__sensor_id = SensorId(type=self.sensor_type, identifier=self.identifier)
         return self.__sensor_id
 
     @property
@@ -73,9 +70,9 @@ class SensorBase[T](ABC):
         return self.__updates_per_second
 
     @property
-    @abstractmethod
     def sensor_type(self) -> SensorType:
-        pass
+        """Get the sensor type."""
+        return self.__sensor_id.type
 
     @abstractmethod
     def to_dict(self) -> dict:

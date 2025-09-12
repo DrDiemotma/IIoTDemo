@@ -8,10 +8,6 @@ from MyServer.Sensor import SensorBase, Mutator, TemperatureSensor
 
 class CustomSensor(SensorBase[int]):
 
-    @property
-    def sensor_type(self) -> SensorType:
-        return SensorType.TEMPERATURE
-
     def on_polling(self):
         pass
 
@@ -31,7 +27,8 @@ class CustomMutator(Mutator[int]):
 
 def test_add_custom_sensor():
     sut: MachineModel = MachineModel()
-    sensor: CustomSensor = CustomSensor(name="Test", namespace="TestNamespace", updates_per_second=100, identifier=626)
+    sensor: CustomSensor = CustomSensor(name="Test", sensor_type=SensorType.TEMPERATURE, namespace="TestNamespace",
+                                        updates_per_second=100, identifier=626)
     mutator: CustomMutator = CustomMutator(sensor, 0)
     sut.add_sensor(sensor, mutator)
     sut.mode = Mode.IDLE

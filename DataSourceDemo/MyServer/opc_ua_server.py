@@ -30,7 +30,7 @@ class OpcUaTestServer:
                  uri: str = URI,
                  device_name: str = DEVICE,
                  machine_model_file: str = CONFIGURATION_FILE,
-                 machine_model: MachineModelBase | None = None):
+                 machine: MachineModelBase | None = None):
         """
         ctor.
         :param freq: Frequency control, distance between two samples.
@@ -39,7 +39,7 @@ class OpcUaTestServer:
         :param uri:
         :param device_name:
         :param machine_model_file: File to store the configuration of the machine model.
-        :param machine_model: Machine representation.
+        :param machine: Machine representation.
         """
         self._freq = freq
         self._stopped = True
@@ -47,6 +47,7 @@ class OpcUaTestServer:
         self._uri: str = uri
         self._device_name: str = device_name
         self._machine_model_file = machine_model_file
+        self._set_up: bool = False
 
         self._end_point: str = (OPC_TCP
                                 + "://" + IP_ADDRESS
@@ -54,7 +55,7 @@ class OpcUaTestServer:
                                 + "/" + server_endpoint + "/")
 
         self._server: asyncua.Server = asyncua.Server()
-        self._model: MachineModelBase = machine_model if machine_model is not None else MachineModel()
+        self._model: MachineModelBase = machine if machine is not None else MachineModel()
         if os.path.isfile(machine_model_file):
             self._model.restore_configuration(self._machine_model_file)
 
@@ -62,21 +63,18 @@ class OpcUaTestServer:
     def model(self) -> MachineModelBase:
         return self._model
 
-
     def alive_status(self) -> str:
         pass
 
-
-    async def setup_server(self):
-        if not self._stopped:
-            return
+    async def setup_server(self) -> bool:
+        if not self._set_up and not self._stopped:
+            return False
 
         await self._server.init()
         self._server.set_endpoint(self._end_point)
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
-        idx: int = await self._server.register_namespace(self._uri)
 
-        objects: asyncua.Node = self._server.get_objects_node()
+        return True
 
 
     async def start(self):

@@ -4,16 +4,13 @@ from MyServer.Sensor.sensor_base import SensorBase
 class TemperatureSensor(SensorBase[float]):
     """Temperature sensor implementation."""
 
-    @property
-    def sensor_type(self) -> SensorType:
-        return SensorType.TEMPERATURE
-
     def __init__(self,
                  identifier: int,
                  namespace: str = "Sensors",
                  updates_per_second: float = 0.5):
         super().__init__(name=f"Temperature_sensor_{identifier:03d}",
                          identifier=identifier,
+                         sensor_type=SensorType.TEMPERATURE,
                          namespace=namespace,
                          updates_per_second=updates_per_second)
 
