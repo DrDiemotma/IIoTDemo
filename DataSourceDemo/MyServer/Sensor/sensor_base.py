@@ -4,6 +4,7 @@ from datetime import datetime
 import asyncio
 from decimal import InvalidOperation
 import inspect
+from typing import Coroutine, Any
 
 
 from MyServer.MachineOperation import SensorType, SensorId
@@ -155,7 +156,7 @@ class SensorBase[T](ABC):
             print(f"Was not able to gather: {e.__repr__()}")
             raise e
 
-    def add_callback(self, callback: Callable[[datetime, T], ...]):
+    def add_callback(self, callback):
         """Add a callback. Can be added only once.
         :param callback: The callback to add.
         """

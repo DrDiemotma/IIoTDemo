@@ -4,16 +4,22 @@ import asyncua
 import asyncio
 import os
 from asyncua import ua
+from asyncua.ua import VariantType
+
 from MyServer.Lifetime import MachineModel
 from MyServer.Lifetime.machine_model_base import MachineModelBase
-from MyServer.OpcUa.server_configuration import ServerConfiguration
+from MyServer.OpcUa import ServerConfiguration, variant_type
+from datetime import datetime
+
 
 OPC_TCP: str = "opc.tcp"
 IP_ADDRESS: str = "0.0.0.0"
 OPC_UA_PORT: int = 4840
+COMPANY: str = "TestCompany.com"
 SERVER_ENDPOINT: str = "freeopcua/server"
 URI: str = "http://example.org/opcua"
 DEVICE: str = "Device"
+SENSOR_URI: str = "sensors"
 TEMPERATURE: str = "Temperature"
 PRESSURE: str = "Pressure"
 FREQ: float = 1.0
@@ -31,6 +37,7 @@ class OpcUaTestServer:
                  server_endpoint: str = SERVER_ENDPOINT,
                  server_configuration: ServerConfiguration | None = None,
                  machine_model_file: str = CONFIGURATION_FILE,
+                 sensor_uri: str = SENSOR_URI,
                  machine: MachineModelBase | None = None):
         """
         ctor.
@@ -38,11 +45,22 @@ class OpcUaTestServer:
         :param server_endpoint: Definition for the server endpoint.
         :param server_configuration: Configuration for the server.
         :param machine_model_file: File to store the configuration of the machine model.
+        :param sensor_uri: URI for the sensor.
         :param machine: Machine representation.
         """
         self._freq = freq
         self._stopped = True
         self._task: asyncio.Task | None = None
+        if server_configuration is None:
+            server_configuration = ServerConfiguration(
+                company=COMPANY,
+                ip_address=IP_ADDRESS,
+                device_name=DEVICE,
+                port=OPC_UA_PORT,
+                fields=[sensor_uri]
+            )
+        if sensor_uri not in server_configuration.fields:
+            server_configuration.fields.append(sensor_uri)
         self._configuration: ServerConfiguration = server_configuration
         self._machine_model_file = machine_model_file
         self._set_up: bool = False
@@ -61,18 +79,64 @@ class OpcUaTestServer:
     def model(self) -> MachineModelBase:
         return self._model
 
+    @property
+    def configuration(self):
+        """Get the current configuration."""
+        return self._configuration
+
+    @property
+    def end_point(self):
+        """Get the end point of the server."""
+        return self._end_point
+
     def alive_status(self) -> str:
         pass
 
     async def setup_server(self) -> bool:
-        if not self._set_up and not self._stopped:
+        """
+        Set up the server.
+        :returns: Whether setup was successful.
+        """
+        if self._set_up or not self._stopped:
             return False
 
         await self._server.init()
         self._server.set_endpoint(self._end_point)
         self._server.set_security_policy([ua.SecurityPolicyType.NoSecurity])
-        # todo the sensor must be installed in an OPC UA object
+        sensor_uri: str = self.get_uri(self._configuration.sensors)
+        sensor_idx: int = await self._server.register_namespace(sensor_uri)
+        objects: asyncua.Node = self._server.nodes.objects
+        sensor_folder: asyncua.Node = await objects.add_folder(sensor_idx, self._configuration.sensors)
+        for sensor in self._model.sensors:
+            if sensor.namespace != self._configuration.sensors:
+                print(f"Other sensor folder not implemented yet, skipping {sensor.name}.")
+            registered_sensor: asyncua.Node = await sensor_folder.add_object(sensor_idx, sensor.name)
+            variant, default_value = variant_type(sensor.sensor_type)
+            value_field: asyncua.Node = await registered_sensor.add_variable(sensor_idx,
+                                                                             "Value",
+                                                                             default_value,
+                                                                             varianttype=variant)
+            time_field: asyncua.Node = await registered_sensor.add_variable(sensor_idx,
+                                                                            "SensorTime",
+                                                                            datetime.now(),
+                                                                            varianttype=VariantType.DateTime)
+            await value_field.set_writable()
+
+            sensor.add_callback(self._make_callback(value_field, time_field, variant))
+        await self._server.start()
+        await asyncio.sleep(0.05)  # asyncua is not reliable, hence better wait for a bit here
+        self._set_up = True
         return True
+
+    @staticmethod
+    def _make_callback(value_field: asyncua.Node, datetime_field: asyncua.Node, vt: ua.VariantType):
+        async def callback(ts: datetime, v):
+            variant = ua.Variant(v, vt)
+            await value_field.set_value(variant)
+            await datetime_field.set_value(ua.Variant(ts, VariantType.DateTime))
+
+        return callback
+
 
 
     async def start(self):
@@ -83,6 +147,7 @@ class OpcUaTestServer:
 
     async def stop(self):
         print("Stopping server")
+        await self._server.stop()
         self._stopped = True
         await asyncio.sleep(0.01 + self._freq)
         self._task.cancel()
@@ -104,3 +169,7 @@ class OpcUaTestServer:
 
         with open(file_name, "w") as f:
             json.dump(self._configuration, f)
+
+    def get_uri(self, namespace: str) -> str:
+        """Get the URI for a namespace. No check whether the namespace exists, just for the convention."""
+        return "urn:" + self._configuration.company + ":opcua:" + namespace

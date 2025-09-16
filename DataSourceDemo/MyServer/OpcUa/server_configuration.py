@@ -13,7 +13,4 @@ class ServerConfiguration:
     """Port of the OPC UA server."""
     device_name: str = "Device"
     """Name of the device to store data in. For human readability."""
-
-    def get_uri(self) -> list[str]:
-        return ["urn:" + self.company + x.replace('.', ':')
-                for x in self.fields]
+    sensors: str = "Sensors"
