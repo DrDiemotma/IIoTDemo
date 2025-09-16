@@ -33,12 +33,12 @@ class OpcUaTestServer:
     """
 
     def __init__(self,
+                 machine: MachineModelBase,
                  freq: float = FREQ,
                  server_endpoint: str = SERVER_ENDPOINT,
                  server_configuration: ServerConfiguration | None = None,
                  machine_model_file: str = CONFIGURATION_FILE,
-                 sensor_uri: str = SENSOR_URI,
-                 machine: MachineModelBase | None = None):
+                 sensor_uri: str = SENSOR_URI):
         """
         ctor.
         :param freq: Frequency control, distance between two samples. Used for clean shutdowns.
@@ -71,7 +71,7 @@ class OpcUaTestServer:
                                 + "/" + server_endpoint + "/")
 
         self._server: asyncua.Server = asyncua.Server()
-        self._model: MachineModelBase = machine if machine is not None else MachineModel()
+        self._model: MachineModelBase = machine
         if os.path.isfile(machine_model_file):
             self._model.restore_configuration(self._machine_model_file)
 

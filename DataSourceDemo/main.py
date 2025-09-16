@@ -1,9 +1,11 @@
 from MyServer import opc_ua_server
 from fastapi import FastAPI
 from MyServer.Api import router
+from MyServer.Lifetime import MachineModel
 
 app = FastAPI(title="OPC UA Server Demo")
-server = opc_ua_server.OpcUaTestServer()
+machine_model: MachineModel = MachineModel()
+server = opc_ua_server.OpcUaTestServer(machine=machine_model)
 app.state.server = server
 app.include_router(router)
 
