@@ -50,7 +50,6 @@ class OpcUaTestServer:
         """
         self._freq = freq
         self._stopped = True
-        self._task: asyncio.Task | None = None
         if server_configuration is None:
             server_configuration = ServerConfiguration(
                 company=COMPANY,
@@ -89,8 +88,9 @@ class OpcUaTestServer:
         """Get the end point of the server."""
         return self._end_point
 
-    def alive_status(self) -> str:
-        pass
+    def alive_status(self) -> bool:
+        """Return whether the server is set up."""
+        return self._set_up and not self._stopped  # this is too simplified, lets rework this later
 
     async def setup_server(self) -> bool:
         """
@@ -123,6 +123,8 @@ class OpcUaTestServer:
             await value_field.set_writable()
 
             sensor.add_callback(self._make_callback(value_field, time_field, variant))
+            if not sensor.running:
+                sensor.start()
         await self._server.start()
         await asyncio.sleep(0.05)  # asyncua is not reliable, hence better wait for a bit here
         self._set_up = True
@@ -137,23 +139,28 @@ class OpcUaTestServer:
 
         return callback
 
-
-
     async def start(self):
-        print("Starting server")
-        await self._server.start()
-        self._stopped = False
-
+        if self._server is None:
+            print("Starting server")
+            await self.setup_server()
+            return True
+        print("Server already running")
+        return False
 
     async def stop(self):
         print("Stopping server")
+        for sensor in self._model.sensors:
+            sensor.stop()
         await self._server.stop()
         self._stopped = True
         await asyncio.sleep(0.01 + self._freq)
-        self._task.cancel()
-        self._task = None
         print("Server stopped.")
 
+    async def start_job(self):
+        raise NotImplementedError()
+
+    async def stop_job(self):
+        raise NotImplementedError()
 
     def save_configuration(self, file_name: str):
         """

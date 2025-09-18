@@ -6,6 +6,7 @@ from decimal import InvalidOperation
 import inspect
 from typing import Coroutine, Any
 
+from fastapi.dependencies.utils import multipart_not_installed_error
 
 from MyServer.MachineOperation import SensorType, SensorId
 
@@ -21,6 +22,7 @@ class SensorBase[T](ABC):
     __callback_locks: dict[Callable[[datetime, T], ...], asyncio.Lock]
     __last_value: T
     __last_measured_time: datetime
+    __mutator_dict: Callable[[], dict] | None = None
     __source: Callable[[...], T] | None
     __task: asyncio.Task | None
 
@@ -75,8 +77,22 @@ class SensorBase[T](ABC):
         """Get the sensor type."""
         return self.__sensor_id.type
 
-    @abstractmethod
     def to_dict(self) -> dict:
+        complete_dict: dict = self._to_dict()
+        if self.__mutator_dict is not None:
+            complete_dict["mutator"] = self.__mutator_dict()
+        return complete_dict
+
+    @property
+    def mutator_dict(self) -> Callable[[], dict]:
+        return self.__mutator_dict
+
+    @mutator_dict.setter
+    def mutator_dict(self, value: Callable[[], dict]):
+        self.__mutator_dict = value
+
+    @abstractmethod
+    def _to_dict(self) -> dict:
         """Create a JSON string from which the sensor can be reconstructed (but the recorded data)."""
         pass
 
@@ -116,6 +132,7 @@ class SensorBase[T](ABC):
             raise
 
     def start(self):
+        """Start polling the sensor."""
         if self.__task is not None:
             raise InvalidOperation("Task already started.")
         if self.__source is None:
@@ -124,6 +141,7 @@ class SensorBase[T](ABC):
         self.__task = asyncio.create_task(self.__poller())
 
     def stop(self):
+        """Stop polling the sensor."""
         if self.__task is None:
             return
         if not self.__task.done():

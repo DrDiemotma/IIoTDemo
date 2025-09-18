@@ -16,6 +16,7 @@ class Mutator[T](ABC):
         self.__value_time: datetime = datetime.now()
         self.__mode: Mode = mode
         self.__state: State = state
+        sensor.mutator_dict = self.to_dict
 
     @property
     def mode(self) -> Mode:
@@ -66,10 +67,6 @@ class Mutator[T](ABC):
     def sensor(self) -> SensorBase[T]:
         """Get the sensor from the mutator."""
         return self.__sensor
-
-    def _get_sensor_dict(self) -> dict:
-        """Get the sensor dictionary representation."""
-        return self.__sensor.to_dict()
 
 
 class MutatorFactory[T](ABC):

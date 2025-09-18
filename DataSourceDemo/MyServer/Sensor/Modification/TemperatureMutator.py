@@ -69,7 +69,7 @@ class TemperatureMutator(Mutator[float]):
     def to_dict(self) -> dict:
         d = {
             "type": SensorType.TEMPERATURE,
-            "sensor": self._get_sensor_dict(),
+            "sensor_id": self.sensor.identifier,
             "start_value": self.last_value,
             "random_seed": self.__seed,
             "st_dev": self.__st_dev,

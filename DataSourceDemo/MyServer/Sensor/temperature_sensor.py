@@ -14,7 +14,7 @@ class TemperatureSensor(SensorBase[float]):
                          namespace=namespace,
                          updates_per_second=updates_per_second)
 
-    def to_dict(self) -> dict:
+    def _to_dict(self) -> dict:
         d = {
             "type": SensorType.TEMPERATURE,
             "identifier": self.identifier,

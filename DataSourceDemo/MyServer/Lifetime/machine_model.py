@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from MyServer.Lifetime.machine_model_base import MachineModelBase
 from MyServer.MachineOperation.sensor_data_model import SensorId
@@ -7,9 +8,46 @@ from MyServer.Sensor import SensorBase, Mutator, TemperatureSensor
 from MyServer.Sensor.Modification.TemperatureMutator import TemperatureMutator, TemperatureMutatorFactory
 from MyServer.Sensor.Modification.mutator import MutatorFactory
 
+MACHINE_STATE: str = "machine_state"
+
 
 class MachineModel(MachineModelBase):
     """Model for machine simulation. Handles the machine state and mode."""
+
+    def custom_message(self, message: dict[str, Any]) -> bool:
+        d_used = {x: False for x in message.keys()}
+        if MACHINE_STATE in message:
+            set_state: bool = message[MACHINE_STATE]
+            if set_state:
+                self.set_state_normal()
+                d_used[MACHINE_STATE] = True
+            else:
+                self.set_state_broken()
+                d_used[MACHINE_STATE] = True
+
+        # find any element that has not been processed
+        fully_used = all(d_used.values())
+        return fully_used
+
+
+
+
+    def start_job(self):
+        for mutator in self._mutators:
+            mutator.mode = Mode.RUNNING
+
+    def stop_job(self):
+        for mutator in self._mutators:
+            mutator.mode = Mode.IDLE
+
+    def set_state_broken(self):
+        for mutator in self._mutators:
+            mutator.state = State.BROKEN
+
+    def set_state_normal(self):
+        for mutator in self._mutators:
+            mutator.state = State.NORMAL
+
     def __init__(self):
         self._sensors: list[SensorBase] = []
         self._mutators: list[Mutator] = []

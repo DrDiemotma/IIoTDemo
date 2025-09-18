@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from MyServer.MachineOperation.sensor_data_model import SensorId
 from MyServer.Sensor import SensorBase, Mutator
+from typing import Any
 
 
 class MachineModelBase(ABC):
@@ -36,4 +37,19 @@ class MachineModelBase(ABC):
     @abstractmethod
     def restore_configuration(self, file_path: str):
         """Restore the configuration from a file."""
+        pass
+
+    @abstractmethod
+    def start_job(self):
+        """Start a job."""
+        pass
+
+    @abstractmethod
+    def stop_job(self):
+        """Stop the running job."""
+        pass
+
+    @abstractmethod
+    def custom_message(self, message: dict[str, Any]) -> bool:
+        """Custom message to the model."""
         pass
