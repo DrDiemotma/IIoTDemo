@@ -31,6 +31,14 @@ there are dependencies between them.
 For example, all services depend on the ControlNode which always has to be
 installed and started first.
 
+## Tests
+
+Functionality is usually tested with the provided test scripts.
+They use the `pytest` framework.
+`pytest-asyncio` is required for asynchronous tests as well,
+because asynchron executions are used frequently throughout the project.
+Since this is used for testing only, it is not in `requirement.txt`.
+
 ## Starting the Services
 
 We recommend using the Podman Desktop application to control the services.
@@ -45,6 +53,12 @@ Please see the manuals for that software on how to work with the services.
 - CollectorNode: 8001
 
 OPC UA is usually working on port 4840.
+
+### API
+
+Notice that the microservices use REST APIs to communicate with each other.
+This is considered a backbone, not a frontend to the user.
+You might want to see the respective functions, please refer to the `router.py` files.
 
 ## UI
 
@@ -78,7 +92,7 @@ It can be understood as the UI to the machine.
 It provides controls and configuration of the machine.
 For data, the OPC UA interface is used, which is behaving like a real machine.
 You can access the REST API at `http://localhost:8765`.
-To start the server, simply run the main.py script.
+To start the server, simply run the `main.py` script.
 There is also a Dockerfile if you prefer a container.
 Since it is a single service, it is not strictly necessary.
 
