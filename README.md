@@ -64,6 +64,24 @@ and coordinating the communication between the other components.
 - Ui: The Ui is a web application that provides some overview of the services running.
 - CollectorNode: The CollectorNode is responsible for collecting data from OPC UA.
 
+### Server
+
+![Server](Images/[OAB]%20OpcUaServer.png)
+
+The OPC UA server is responsible for providing the data to the CollectorNode.
+It is implemented using the asyncua library.
+Currently, this is a pure simulation;
+however, the machine model is easy to be exchanged with other models.
+
+The REST API layer is used for control only.
+It can be understood as the UI to the machine.
+It provides controls and configuration of the machine.
+For data, the OPC UA interface is used, which is behaving like a real machine.
+You can access the REST API at `http://localhost:8765`.
+To start the server, simply run the main.py script.
+There is also a Dockerfile if you prefer a container.
+Since it is a single service, it is not strictly necessary.
+
 ### Initialization
 
 ![Initialization](Images/[OAB]%20Edge%20Initialization.png)
