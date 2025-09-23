@@ -10,6 +10,7 @@ from ControlNode.Server import ControlServer
 @asynccontextmanager
 async def lifespan(application: FastAPI):
     Common.Logging.setup("ControlNode", logging.INFO)
+    logging.info("Starting the ControlServer.")
     control_server: ControlServer = ControlServer()
     application.state.control_server = control_server
     yield

@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Callable
 from typing import Any
 from Common.Communication import DataMessageModel
@@ -20,6 +21,7 @@ class Poller:
         :param polling_rate: How often the data is taken from the
         :param publish_callback:
         """
+        logging.info(f"Initializing poller \"{name}\": polling rate {polling_rate}.")
         self._node: asyncua.Node = node
         self._name: str = name
         self._publish_callback = publish_callback
@@ -31,20 +33,24 @@ class Poller:
     def start(self):
         """Start the poller. Does nothing if already running."""
         if self._running:
+            logging.warning(f"Tried to start the poller for {self._name} while it was already running.")
             return
 
         self._running = True
         self._task = asyncio.create_task(self._poll())
+        logging.info(f"Poller for {self._name} started.")
 
     async def stop(self):
         """Stop the poller."""
         self._running = False
+        logging.info(f"Poller for {self._name} stopping.")
 
         await asyncio.sleep(1.1 * self._sleep)
 
         if self._task and not self._task.done():
             self._task.cancel()
         self._task = None
+        logging.info(f"Poller for {self._name} stopped.")
 
     @property
     def running(self) -> bool:
@@ -67,6 +73,7 @@ class Poller:
         source_timestamp: datetime = data_value.SourceTimestamp
         server_timestamp: datetime = data_value.ServerTimestamp
         value = data_value.Value.Value
+        logging.debug(f"Value read from {self._name}: {source_timestamp}/{server_timestamp}: {value}")
 
         message = DataMessageModel(name=self._name,
                                    timestamp=source_timestamp,
