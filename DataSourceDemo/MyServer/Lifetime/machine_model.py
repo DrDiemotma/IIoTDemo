@@ -35,8 +35,6 @@ class MachineModel(MachineModelBase):
         return fully_used
 
 
-
-
     def start_job(self):
         logging.info("Starting job.")
         for mutator in self._mutators:

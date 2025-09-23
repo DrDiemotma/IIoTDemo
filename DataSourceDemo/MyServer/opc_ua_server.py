@@ -5,8 +5,8 @@ import asyncio
 import os
 from asyncua import ua
 from asyncua.ua import VariantType
+import logging
 
-from MyServer.Lifetime import MachineModel
 from MyServer.Lifetime.machine_model_base import MachineModelBase
 from MyServer.OpcUa import ServerConfiguration, variant_type
 from datetime import datetime
@@ -48,6 +48,7 @@ class OpcUaTestServer:
         :param sensor_uri: URI for the sensor.
         :param machine: Machine representation.
         """
+        logging.info(f"Creating OpcUaTestServer with {freq=} {server_endpoint=} {server_configuration=} {machine_model_file=} {sensor_uri=}")
         self._freq = freq
         self._stopped = True
         if server_configuration is None:
@@ -98,6 +99,7 @@ class OpcUaTestServer:
         :returns: Whether setup was successful.
         """
         if self._set_up or not self._stopped:
+            logging.warning(f"Tried to setup the server, but set up = {self._set_up}, stopped = {self._stopped}.")
             return False
 
         await self._server.init()
@@ -108,8 +110,9 @@ class OpcUaTestServer:
         objects: asyncua.Node = self._server.nodes.objects
         sensor_folder: asyncua.Node = await objects.add_folder(sensor_idx, self._configuration.sensors)
         for sensor in self._model.sensors:
+            logging.info(f"Trying to add {sensor.name} to the data model.")
             if sensor.namespace != self._configuration.sensors:
-                print(f"Other sensor folder not implemented yet, skipping {sensor.name}.")
+                logging.warning(f"Alternative sensor folder not implemented yet, skipping {sensor.name}.")
             registered_sensor: asyncua.Node = await sensor_folder.add_object(sensor_idx, sensor.name)
             variant, default_value = variant_type(sensor.sensor_type)
             value_field: asyncua.Node = await registered_sensor.add_variable(sensor_idx,
@@ -125,8 +128,11 @@ class OpcUaTestServer:
             sensor.add_callback(self._make_callback(value_field, time_field, variant))
             if not sensor.running:
                 sensor.start()
+            logging.info(f"Sensor {sensor.name} added.")
+        logging.info("All sensors added, starting OPC UA server.")
         await self._server.start()
         await asyncio.sleep(0.05)  # asyncua is not reliable, hence better wait for a bit here
+        logging.info("Everything set up.")
         self._set_up = True
         return True
 
@@ -141,26 +147,28 @@ class OpcUaTestServer:
 
     async def start(self):
         if self._server is None:
-            print("Starting server")
+            logging.info("Starting server")
             await self.setup_server()
             return True
-        print("Server already running")
+        logging.warning("Server already running")
         return False
 
     async def stop(self):
-        print("Stopping server")
+        logging.info("Stopping server")
         for sensor in self._model.sensors:
             sensor.stop()
         await self._server.stop()
         self._stopped = True
         await asyncio.sleep(0.01 + self._freq)
-        print("Server stopped.")
+        logging.info("Server stopped.")
 
     async def start_job(self):
-        raise NotImplementedError()
+        logging.info("Start job called in OPC UA server.")
+        await self._model.start_job()
 
     async def stop_job(self):
-        raise NotImplementedError()
+        logging.info("Stopping job called in OPC UA server.")
+        await self._model.stop_job()
 
     def save_configuration(self, file_name: str):
         """
@@ -169,13 +177,17 @@ class OpcUaTestServer:
         """
         if not self._set_up:
             # configurations that are not set up don't need to be saved.
+            logging.warning("Saving of configuration skipped: not set up.")
             return
 
         if os.path.isfile(file_name):
+            logging.info(f"Removing previous file {file_name}.")
             os.remove(file_name)
 
         with open(file_name, "w") as f:
             json.dump(self._configuration, f)
+
+        logging.info(f"Configuration written to {file_name}.")
 
     def get_uri(self, namespace: str) -> str:
         """Get the URI for a namespace. No check whether the namespace exists, just for the convention."""

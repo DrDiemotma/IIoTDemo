@@ -74,3 +74,4 @@ class MutatorFactory[T](ABC):
     @abstractmethod
     def from_dict(d: dict) -> Mutator[T]:
         """create a new instance from a dict."""
+        ...

@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 
 import pytest
 from asyncua import Client, ua
@@ -6,11 +7,19 @@ from asyncua import Client, ua
 from MyServer import OpcUaTestServer
 from MyServer.Lifetime import MachineModelBase
 from MyServer.MachineOperation import SensorId
-from MyServer.OpcUa import ServerConfiguration
 from MyServer.Sensor import TemperatureSensor, SensorBase, Mutator
 
 
 class MachineModelMock(MachineModelBase):
+    def start_job(self):
+        pass
+
+    def stop_job(self):
+        pass
+
+    def custom_message(self, message: dict[str, Any]) -> bool:
+        pass
+
     _sensors = []
     temperature = 0.0
     def restore_configuration(self, file_path: str):

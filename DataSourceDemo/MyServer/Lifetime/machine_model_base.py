@@ -40,12 +40,12 @@ class MachineModelBase(ABC):
         pass
 
     @abstractmethod
-    def start_job(self):
+    async def start_job(self):
         """Start a job."""
         pass
 
     @abstractmethod
-    def stop_job(self):
+    async def stop_job(self):
         """Stop the running job."""
         pass
 

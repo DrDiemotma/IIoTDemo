@@ -4,9 +4,7 @@ from datetime import datetime
 import asyncio
 from decimal import InvalidOperation
 import inspect
-from typing import Coroutine, Any
-
-from fastapi.dependencies.utils import multipart_not_installed_error
+import logging
 
 from MyServer.MachineOperation import SensorType, SensorId
 
@@ -45,6 +43,7 @@ class SensorBase[T](ABC):
         self.__sensor_id: SensorId = SensorId(type=sensor_type, identifier=identifier)
 
     def __del__(self):
+        logging.info(f"Shutting down {self.__name} (ID = {self.__sensor_id}).")
         self.stop()
 
     @property
@@ -117,6 +116,7 @@ class SensorBase[T](ABC):
 
     async def __poller(self):
         time_span: float = 1.0 / self.__updates_per_second
+        logging.debug(f"Setting up poller (ID = {self.__sensor_id}).")
         try:
             while self.__source is not None:
                 start_time: datetime = datetime.now()  # start of the full process
@@ -128,27 +128,32 @@ class SensorBase[T](ABC):
                 time_delta: float = (stop_time - start_time).total_seconds()
                 if time_delta < time_span:
                     await asyncio.sleep(time_span - time_delta)
-        except:
-            raise
+        except Exception as e:
+            logging.error(f"Error while receiving data from ID = {self.__sensor_id}: {e}")
+            raise e
 
     def start(self):
         """Start polling the sensor."""
+        logging.info(f"Starting the sensor ID = {self.__sensor_id}.")
         if self.__task is not None:
+            logging.error(f"Sensor with ID = {self.__sensor_id} already running."
+                          "Please call \"running\" before the start.")
             raise InvalidOperation("Task already started.")
         if self.__source is None:
+            logging.error(f"Source of the sensor {self.__sensor_id} is not set.")
             return
 
         self.__task = asyncio.create_task(self.__poller())
 
     def stop(self):
         """Stop polling the sensor."""
+        logging.info(f"Stopping the sensor with ID = {self.__sensor_id}.")
         if self.__task is None:
+            logging.warning(f"Sensor with ID = {self.__sensor_id} was not running.")
             return
         if not self.__task.done():
             self.__task.cancel()
         self.__task = None
-
-
 
     async def on_new_data(self, timestamp: datetime, data: T):
         """
@@ -171,7 +176,7 @@ class SensorBase[T](ABC):
         try:
             await asyncio.gather(*(safe_call(cb) for cb in self.__callbacks))
         except Exception as e:
-            print(f"Was not able to gather: {e.__repr__()}")
+            logging.error(f"Was not able to gather: {e.__repr__()}")
             raise e
 
     def add_callback(self, callback):
@@ -179,6 +184,7 @@ class SensorBase[T](ABC):
         :param callback: The callback to add.
         """
         if callback not in self.__callbacks:
+            logging.info(f"Adding callback to sensor with ID = {self.__sensor_id}.")
             self.__callbacks.append(callback)
 
     def remove_callback(self, callback: Callable[[datetime, T], ...]) -> bool:
@@ -188,7 +194,8 @@ class SensorBase[T](ABC):
         :return: Whether the callback was removed.
         """
         if callback not in self.__callbacks:
+            logging.warning(f"Trying to remove a callback from sensor with ID = {self.__sensor_id} which was not present")
             return False
-
+        logging.info(f"Removing callback from sensor with ID = {self.__sensor_id}.")
         self.__callbacks.remove(callback)
         return True

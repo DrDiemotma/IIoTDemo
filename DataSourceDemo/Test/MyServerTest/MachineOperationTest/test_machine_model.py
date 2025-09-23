@@ -8,6 +8,9 @@ from MyServer.Sensor import SensorBase, Mutator, TemperatureSensor
 
 class CustomSensor(SensorBase[int]):
 
+    def _to_dict(self) -> dict:
+        pass
+
     def on_polling(self):
         pass
 
