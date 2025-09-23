@@ -1,14 +1,18 @@
+import logging
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from CollectorNode.routes import router
 from CollectorNode.OpcUaClient import OpcUaManagingServer
-
+import Common.Logging.setup
 
 opc_ua_managing_server: OpcUaManagingServer = OpcUaManagingServer()
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
-    await opc_ua_managing_server.register()
+    Common.Logging.setup("CollectorNode", logging.INFO)
+    managing_server: OpcUaManagingServer = application.state.opc_ua_managing_server
+
+    await managing_server.register()
     yield
 
 app = FastAPI(lifespan=lifespan)
