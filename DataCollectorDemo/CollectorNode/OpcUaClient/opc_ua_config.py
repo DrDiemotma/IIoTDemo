@@ -1,6 +1,7 @@
 import os.path
 import json
 from dataclasses import dataclass, field
+import logging
 
 PROTOCOL: str = "opc.tcp"
 
@@ -47,12 +48,17 @@ def save_config(config: OpcUaConfig, file_path: str):
         try:
             os.remove(file_path)
         except:
+            logging.error("Was not able to alter the configuration file.")
             raise
     try:
         with open(file_path, "w") as f:
             json.dump(config, f, cls=NodeConfigJsonEncoder, indent=4)
-    except:
-        raise
+    except OSError as ose:
+        logging.error(f"Was not able to write the file: {ose}")
+        raise ose
+    except Exception as e:
+        logging.error(f"Unexpected exception: Was not able to write configuration file. {e}")
+        raise e
 
 
 def load_config(file_path: str) -> OpcUaConfig:
@@ -62,13 +68,14 @@ def load_config(file_path: str) -> OpcUaConfig:
     :return:
     """
     if not os.path.isfile(file_path):
+        logging.error(f"Tried to load not existing file from path {file_path}.")
         raise FileNotFoundError(file_path)
 
     try:
         with open(file_path, "r") as f:
             data = json.load(f, cls=NodeConfigJsonDecoder)
     except OSError as ose:
-        print(f"Could not open file: {ose}")
+        logging.error(f"Could not open file: {ose}")
         raise ose
 
     return data

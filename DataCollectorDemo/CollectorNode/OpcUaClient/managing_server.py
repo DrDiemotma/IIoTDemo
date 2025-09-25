@@ -25,10 +25,10 @@ class OpcUaManagingServer(ServerBase):
         super().__init__("OpcUaManager", 8001)
         self._clients: list[OpcUaClient] = []
 
-    def shutdown(self):
+    async def shutdown(self):
         for client in self._clients:
             if client.is_connected():
-                client.disconnect()
+                await client.disconnect()
 
     def on_new_data(self, dataset):
         pass

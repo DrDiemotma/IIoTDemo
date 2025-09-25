@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Request
+import logging
 
 from CollectorNode.OpcUaClient import OpcUaManagingServer
 from Common.Communication import ResponseFactory, ResponseModel
@@ -7,12 +8,14 @@ router: APIRouter = APIRouter()
 
 @router.get("/", response_model=ResponseModel)
 def root_call():
+    logging.info("Test call in CollectorNode.")
     return ResponseFactory.ok(values="CollectorNode")
 
 @router.get("/is_online", response_model=ResponseModel)
 def is_online(request: Request):
     service: OpcUaManagingServer = request.app.state.opc_ua_managing_server
     response: bool = service.is_online
+    logging.info(f"Requested is online {response=}")
     return ResponseFactory.ok(values=response)
 
 @router.get("/call", response_model=ResponseModel)
