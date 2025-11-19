@@ -24,7 +24,7 @@ async def get_services_async(control_server_port: int = 8000, retries: int = 5) 
                 tries += 1
                 continue
             except Exception as e:
-                return[repr(e)]
+                return [repr(e)]
 
             success = True
 
