@@ -1,0 +1,1 @@
+from .dialogs import create_pressure_sensor, create_temperature_sensor, delete_sensor

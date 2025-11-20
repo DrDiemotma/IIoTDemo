@@ -36,6 +36,24 @@ def add_sensor(url: str, payload: dict, timeout: float):
                 return True
             else:
                 logging.error(f"Sensor not added: {response}")
+                return False
+
+    except Exception as e:
+        logging.error(f"Error caught while trying to add a sensor: {e}")
+        return False
+
+
+def delete_sensor(url: str, payload: dict, timeout: float):
+    call = f"{url}/delete_sensor"
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.post(call, json=payload)
+            if response.status_code == 200:
+                logging.info(f"Successfully deleted sensor {payload['type']} {payload['identifier']}")
+                return True
+            else:
+                logging.error(f"Sensor not deleted: {response}")
+                return False
 
     except Exception as e:
         logging.error(f"Error caught while trying to add a sensor: {e}")
