@@ -7,6 +7,12 @@ from Common.Communication import ResponseModel
 
 
 async def get_services_async(control_server_port: int = 8000, retries: int = 5) -> list[str]:
+    """
+    Get the microservices which are currently running.
+    :param control_server_port: Port for the control server.
+    :param retries: How many retries are performed.
+    :return: List of service names or representations of errors.
+    """
     server_url: str = f"http://localhost:{control_server_port}/get_services"
     async with httpx.AsyncClient() as client:
         tries = 0
