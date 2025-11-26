@@ -5,7 +5,7 @@ from Ui.Frames.ServerControlHelper import create_temperature_sensor, create_pres
 
 base_url: str = "http://localhost:8765"
 v01_url = f"{base_url}/v0.1"
-timeout: float = 1.0
+timeout: float = 5.0
 
 
 ## page layout
@@ -62,3 +62,24 @@ if stop_column.button("Stop Machine", disabled=not is_online
     OpcUaServer.stop_server(v01_url, timeout)
     st.rerun()
 
+st.divider()
+
+## Job start/stop
+
+job_is_running: bool = OpcUaServer.is_job_running(v01_url, timeout)
+job_start_column, job_stop_column = st.columns(2)
+if job_start_column.button("Start Job", disabled=not is_online
+                                                or not is_initialized
+                                                or not is_running
+                                                or number_of_sensors == 0
+                                                or job_is_running):
+    OpcUaServer.stop_job(v01_url, timeout)
+    st.rerun()
+
+if job_stop_column.button("Stop Botton", disabled=not is_online
+                                                  or not is_initialized
+                                                  or not is_running
+                                                  or number_of_sensors == 0
+                                                  or not job_is_running):
+    OpcUaServer.stop_job(v01_url, timeout)
+    st.rerun()

@@ -132,4 +132,43 @@ def is_server_running(url: str, timeout: float) -> bool:
 
     return False
 
+def is_job_running(url: str, timeout: float) -> bool:
+    call = f"{url}/is_job_running"
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.get(call)
+            if response.status_code == 200:
+                result = response.json()
+                logging.info(f"Requested job running, status: {result}")
+                return result
+            else:
+                logging.error(f"Could not get the job status: {response}")
+                return False
+    except Exception as e:
+        logging.error(f"Caught exception while trying to receive job status: {e}")
 
+    return False
+
+def start_job(url: str, timeout: float) -> None:
+    call = f"{url}/start_job"
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.post(call)
+            if response.status_code == 200:
+                logging.info("Started job running.")
+            else:
+                logging.error(f"Could not start the job: {response}")
+    except Exception as e:
+        logging.error(f"Caught exception while trying to start the job: {e}")
+
+def stop_job(url: str, timeout: float) -> None:
+    call = f"{url}/stop_job"
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.post(call)
+            if response.status_code == 200:
+                logging.info("Stopped the job.")
+            else:
+                logging.error(f"Could not stop the job: {response}")
+    except Exception as e:
+        logging.error(f"Caught exception while trying to stop the job: {e}")
