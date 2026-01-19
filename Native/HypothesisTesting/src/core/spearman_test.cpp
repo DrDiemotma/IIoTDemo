@@ -20,7 +20,7 @@ void SpearmanTest::execute_test() {
         : std::exp(0.5 * (ln_dim + ln_dim_neg + ln_dim_pos));
     calculate_ranks();
 
-    // see M. Hollander et. al., "Nonparametric Statistical Methods", Third Edition, p. 428, (8.64)
+    // see M. Hollander et al., "Nonparametric Statistical Methods", Third Edition, p. 428, (8.64)
     double rank_difference_squared = 0;
     for (auto rank_tuple : m_ranks ) {
         const auto difference_normalized  = rank_tuple.difference() / scaling_factor;
